@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Entrance Access Control Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#461599",
+                        "tertiary-fixed": "#ffdcc2",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-surface-variant": "#494453",
+                        "outline-variant": "#cbc3d5",
+                        "on-tertiary-container": "#ffb371",
+                        "surface-container-low": "#f3f3f5",
+                        "secondary": "#5f5e5e",
+                        "on-primary-fixed": "#24005b",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#e2dfde",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#eaddff",
+                        "inverse-on-surface": "#f0f0f2",
+                        "surface": "#f9f9fb",
+                        "on-secondary-container": "#636262",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary": "#5a2f00",
+                        "on-tertiary-fixed-variant": "#6d3a00",
+                        "on-primary-container": "#ceb8ff",
+                        "primary-container": "#5e35b1",
+                        "primary-fixed-dim": "#d1bcff",
+                        "inverse-primary": "#d1bcff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1d",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2f3132",
+                        "surface-container-highest": "#e2e2e4",
+                        "tertiary-fixed-dim": "#ffb77a",
+                        "on-primary-fixed-variant": "#5429a7",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#2e1500",
+                        "surface-dim": "#d9dadc",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f9f9fb",
+                        "surface-container": "#eeeef0",
+                        "secondary-fixed": "#e5e2e1",
+                        "background": "#f9f9fb",
+                        "surface-variant": "#e2e2e4",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#e8e8ea",
+                        "tertiary-container": "#7b4200",
+                        "on-surface": "#1a1c1d",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-tint": "#6c45c0",
+                        "outline": "#7b7484"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "base": "8px",
+                        "lg": "40px",
+                        "container-max": "1280px",
+                        "md": "24px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col items-center">
+<!-- Top Navigation App Bar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-lg h-16 bg-surface border-b border-outline-variant shadow-none">
+<div class="flex items-center gap-2">
+<span class="font-headline-md-mobile md:font-headline-md text-headline-md-mobile md:text-headline-md font-bold text-primary">Control de Acceso</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span class="font-label-md text-label-md text-on-surface-variant">Online</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-primary hover:bg-surface-container-low transition-colors duration-200 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-primary hover:bg-surface-container-low transition-colors duration-200 rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-container-max px-4 md:px-lg pt-24 pb-32 flex flex-col gap-md">
+<!-- Search and Action Bar -->
+<section class="flex flex-col md:flex-row gap-4 w-full">
+<div class="relative flex-grow">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input aria-label="Buscar DNI" class="w-full h-16 pl-12 pr-4 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-lg text-body-lg text-on-surface focus:border-primary focus:ring-0 focus:outline-none placeholder-outline" placeholder="Buscar DNI..." type="text"/>
+</div>
+<button class="h-16 px-8 bg-primary-container text-on-primary font-headline-sm text-headline-sm rounded-lg flex items-center justify-center gap-2 shadow-sm hover:bg-primary transition-colors flex-shrink-0 w-full md:w-auto">
+<span class="material-symbols-outlined" data-weight="fill">qr_code_scanner</span>
+                Escanear QR
+            </button>
+</section>
+<!-- Real-time Metrics Cards -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg flex flex-col justify-between items-start h-full">
+<span class="font-label-md text-label-md text-on-surface-variant mb-2">Aforo libre</span>
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">45</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg flex flex-col justify-between items-start h-full">
+<span class="font-label-md text-label-md text-on-surface-variant mb-2">Ingresados</span>
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">120</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg flex flex-col justify-between items-start h-full">
+<span class="font-label-md text-label-md text-on-surface-variant mb-2">Salidas</span>
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">12</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg flex flex-col justify-between items-start h-full">
+<span class="font-label-md text-label-md text-on-surface-variant mb-2">Por Confirmar</span>
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">8</span>
+</div>
+</section>
+<!-- Visual Error Alert -->
+<section class="w-full">
+<div class="bg-error-container border border-error p-4 rounded-lg flex items-start gap-3 w-full">
+<span class="material-symbols-outlined text-error mt-0.5" data-weight="fill">error</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-error-container">Atención</span>
+<span class="font-body-md text-body-md text-on-error-container">Este invitado ya ingresó a las 10:45 AM.</span>
+</div>
+</div>
+</section>
+<!-- Waiting List -->
+<section class="w-full flex flex-col gap-4">
+<h2 class="font-headline-md text-headline-md text-on-surface">Lista de Espera</h2>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<ul class="flex flex-col">
+<li class="flex items-center justify-between p-4 border-b border-outline-variant last:border-b-0 min-h-[72px]">
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">Juan Pérez</span>
+<span class="font-body-md text-body-md text-on-surface-variant">DNI: 12345678 - Estudiante</span>
+</div>
+<button class="px-6 py-3 bg-surface-container text-on-surface-variant border border-outline font-label-md text-label-md rounded hover:bg-surface-container-high transition-colors flex items-center gap-2">
+                            Aprobar
+                        </button>
+</li>
+<li class="flex items-center justify-between p-4 border-b border-outline-variant last:border-b-0 min-h-[72px]">
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">María Rodríguez</span>
+<span class="font-body-md text-body-md text-on-surface-variant">DNI: 87654321 - Invitado</span>
+</div>
+<button class="px-6 py-3 bg-surface-container text-on-surface-variant border border-outline font-label-md text-label-md rounded hover:bg-surface-container-high transition-colors flex items-center gap-2">
+                            Aprobar
+                        </button>
+</li>
+<li class="flex items-center justify-between p-4 border-b border-outline-variant last:border-b-0 min-h-[72px]">
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">Carlos Gómez</span>
+<span class="font-body-md text-body-md text-on-surface-variant">DNI: 11223344 - Docente</span>
+</div>
+<button class="px-6 py-3 bg-surface-container text-on-surface-variant border border-outline font-label-md text-label-md rounded hover:bg-surface-container-high transition-colors flex items-center gap-2">
+                            Aprobar
+                        </button>
+</li>
+</ul>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-surface border-t border-outline-variant px-2 py-3 pb-safe shadow-md rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-primary font-bold bg-primary-fixed rounded-full px-4 py-1 active:bg-surface-container-highest transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="home" data-weight="fill">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary active:bg-surface-container-highest transition-all duration-200 ease-in-out px-4 py-1 rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-sm text-label-sm mt-1">Guests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary active:bg-surface-container-highest transition-all duration-200 ease-in-out px-4 py-1 rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="qr_code_2">qr_code_2</span>
+<span class="font-label-sm text-label-sm mt-1">Invitation</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary active:bg-surface-container-highest transition-all duration-200 ease-in-out px-4 py-1 rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

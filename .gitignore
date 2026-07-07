@@ -1,0 +1,12 @@
+# Ignorar dependencias
+**/node_modules/
+
+# Ignorar builds de Next.js
+**/.next/
+**/out/
+
+# Ignorar archivos de entorno locales (seguridad)
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local

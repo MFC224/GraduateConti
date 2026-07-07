@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Guest List Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#461599",
+                        "tertiary-fixed": "#ffdcc2",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-surface-variant": "#494453",
+                        "outline-variant": "#cbc3d5",
+                        "on-tertiary-container": "#ffb371",
+                        "surface-container-low": "#f3f3f5",
+                        "secondary": "#5f5e5e",
+                        "on-primary-fixed": "#24005b",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#e2dfde",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#eaddff",
+                        "inverse-on-surface": "#f0f0f2",
+                        "surface": "#f9f9fb",
+                        "on-secondary-container": "#636262",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary": "#5a2f00",
+                        "on-tertiary-fixed-variant": "#6d3a00",
+                        "on-primary-container": "#ceb8ff",
+                        "primary-container": "#5e35b1",
+                        "primary-fixed-dim": "#d1bcff",
+                        "inverse-primary": "#d1bcff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1d",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2f3132",
+                        "surface-container-highest": "#e2e2e4",
+                        "tertiary-fixed-dim": "#ffb77a",
+                        "on-primary-fixed-variant": "#5429a7",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#2e1500",
+                        "surface-dim": "#d9dadc",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f9f9fb",
+                        "surface-container": "#eeeef0",
+                        "secondary-fixed": "#e5e2e1",
+                        "background": "#f9f9fb",
+                        "surface-variant": "#e2e2e4",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#e8e8ea",
+                        "tertiary-container": "#7b4200",
+                        "on-surface": "#1a1c1d",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-tint": "#6c45c0",
+                        "outline": "#7b7484"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "base": "8px",
+                        "lg": "40px",
+                        "container-max": "1280px",
+                        "md": "24px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen pb-24 md:pb-0 font-body-md">
+<!-- TopNavBar (Mobile: Hidden, Web: Visible) -->
+<header class="hidden md:flex fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-lg h-16 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-on-surface-variant transition-colors duration-200">
+<div class="font-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+            Graduation Portal
+        </div>
+<div class="flex items-center gap-4">
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Web Only) -->
+<nav class="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 p-md gap-base bg-surface-container-lowest dark:bg-inverse-surface border-r border-outline-variant dark:border-on-surface-variant pt-24 z-40">
+<div class="flex items-center gap-3 mb-6 px-3">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A small, professional circular placeholder logo for a graduation institution. Minimalist design, simple geometric shapes, clean lines, high contrast. Using primary purple tones against a white background. Designed for a modern, corporate academic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAO9VJQxMDpv45XG1NsbqlzMkW_yCr6GgLGb_lFPfysD5EO3ccskc4PyqpvpbYQO5lPMMQzBlZcL0nTgIhW1t4mq17dTHR4iaEv4tCLYZf9yGLoyiOIVGv4uJvRviCbTQV3Xi88r8gisK9We3bh1qYm0yGJ6HvR2E7FIjB2_yxlDm6ZcyXGsUEqdCnxmjLgH7nXlfJURX7AwaU0TFuT9A1oY2RAMFkWIW3l_ieUyEsfiGOUwCSUaKabm7WCckm2APCWXIXOjHIO2AHO"/>
+<div>
+<div class="font-headline-sm text-primary dark:text-primary-fixed-dim font-bold">Graduation Admin</div>
+<div class="font-label-md text-on-surface-variant">Academic Management</div>
+</div>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-label-md">Graduates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">event</span>
+<span class="font-label-md">Ceremonies</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary-container text-on-primary-container font-semibold rounded-lg scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined filled">group</span>
+<span class="font-label-md">Guests</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+<div class="mt-auto flex flex-col gap-2">
+<button class="w-full py-2 border border-outline rounded-lg text-primary font-label-md hover:bg-surface-container-low transition-colors">Export Reports</button>
+<div class="h-px bg-outline-variant my-2"></div>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md">Help</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 md:pt-24 pt-6 px-4 md:px-lg max-w-container-max mx-auto w-full">
+<!-- Header Section -->
+<div class="mb-md">
+<div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-6">
+<div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-on-surface mb-xs">Maria Garcia</h1>
+<p class="font-headline-sm text-secondary">Ceremonia de Graduación 2024</p>
+</div>
+<!-- Attendance Toggle -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-center justify-between gap-4 max-w-sm">
+<span class="font-label-md text-on-surface">Confirmar mi asistencia</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Visual Indicator Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md mb-xl">
+<div class="flex items-center justify-between mb-sm">
+<span class="font-label-md text-on-surface-variant">Pases garantizados</span>
+<span class="font-label-md font-bold text-primary">2 / 3</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mb-sm">
+<div class="bg-primary h-2 rounded-full" style="width: 66%"></div>
+</div>
+<p class="font-body-md text-secondary text-sm">Has usado 2 de 3 pases garantizados.</p>
+</div>
+</div>
+<!-- Guest List Section -->
+<div>
+<h2 class="font-headline-md text-on-surface mb-md">Invitados</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md mb-xl">
+<!-- Card 1: Aprobado -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col hover:bg-surface-container-low transition-colors duration-200">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-on-surface text-base">Juan Carlos Garcia</h3>
+<p class="font-label-sm text-secondary">Familiar directo</p>
+</div>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="mt-auto pt-4 border-t border-surface-variant">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-label-md bg-[#E8F5E9] text-[#2E7D32]">
+                            Aprobado
+                        </span>
+</div>
+</div>
+<!-- Card 2: En espera -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col hover:bg-surface-container-low transition-colors duration-200">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-on-surface text-base">Elena Rodriguez</h3>
+<p class="font-label-sm text-secondary">Familiar directo</p>
+</div>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="mt-auto pt-4 border-t border-surface-variant">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-label-md bg-surface-container-highest text-on-surface-variant">
+                            En espera
+                        </span>
+</div>
+</div>
+</div>
+<!-- Full Width Add Button (Mobile) / Regular Button (Desktop) -->
+<button class="w-full md:w-auto bg-primary text-on-primary font-label-md px-6 py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined">add</span>
+                Agregar invitado
+            </button>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-surface dark:bg-inverse-surface px-2 py-3 pb-safe border-t border-outline-variant dark:border-on-surface-variant rounded-t-xl shadow-md transition-all duration-200 ease-in-out">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim active:bg-surface-container-highest p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold bg-primary-fixed dark:bg-primary-container rounded-full px-4 py-1" href="#">
+<span class="material-symbols-outlined filled">group</span>
+<span class="font-label-sm mt-1">Guests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim active:bg-surface-container-highest p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">qr_code_2</span>
+<span class="font-label-sm mt-1">Invitation</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim active:bg-surface-container-highest p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Graduate Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#461599",
+                      "tertiary-fixed": "#ffdcc2",
+                      "on-secondary-fixed-variant": "#474746",
+                      "on-surface-variant": "#494453",
+                      "outline-variant": "#cbc3d5",
+                      "on-tertiary-container": "#ffb371",
+                      "surface-container-low": "#f3f3f5",
+                      "secondary": "#5f5e5e",
+                      "on-primary-fixed": "#24005b",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#e2dfde",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed": "#eaddff",
+                      "inverse-on-surface": "#f0f0f2",
+                      "surface": "#f9f9fb",
+                      "on-secondary-container": "#636262",
+                      "on-primary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "tertiary": "#5a2f00",
+                      "on-tertiary-fixed-variant": "#6d3a00",
+                      "on-primary-container": "#ceb8ff",
+                      "primary-container": "#5e35b1",
+                      "primary-fixed-dim": "#d1bcff",
+                      "inverse-primary": "#d1bcff",
+                      "error": "#ba1a1a",
+                      "on-background": "#1a1c1d",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#2f3132",
+                      "surface-container-highest": "#e2e2e4",
+                      "tertiary-fixed-dim": "#ffb77a",
+                      "on-primary-fixed-variant": "#5429a7",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed": "#2e1500",
+                      "surface-dim": "#d9dadc",
+                      "error-container": "#ffdad6",
+                      "surface-bright": "#f9f9fb",
+                      "surface-container": "#eeeef0",
+                      "secondary-fixed": "#e5e2e1",
+                      "background": "#f9f9fb",
+                      "surface-variant": "#e2e2e4",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "surface-container-high": "#e8e8ea",
+                      "tertiary-container": "#7b4200",
+                      "on-surface": "#1a1c1d",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "surface-tint": "#6c45c0",
+                      "outline": "#7b7484"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "12px",
+                      "base": "8px",
+                      "lg": "40px",
+                      "container-max": "1280px",
+                      "md": "24px",
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "xl": "64px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest min-h-screen flex items-center justify-center font-body-md text-on-surface antialiased p-md md:p-xl">
+<main class="w-full max-w-md mx-auto">
+<!-- Header Section -->
+<header class="mb-lg text-center">
+<h1 class="font-headline-md text-headline-md md:font-display-lg md:text-display-lg text-primary mb-md">Graduation Portal</h1>
+<p class="font-body-lg text-body-lg text-secondary">Ingresa tus datos para registrar a tus invitados</p>
+</header>
+<!-- Form Section -->
+<form class="space-y-md bg-surface-container-lowest p-md md:p-lg border border-surface-variant rounded-xl shadow-sm">
+<!-- DNI Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface" for="dni">DNI</label>
+<input aria-label="Documento Nacional de Identidad" class="w-full h-12 px-sm border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-200" id="dni" name="dni" placeholder="Ingresa tu DNI" required="" type="text"/>
+</div>
+<!-- Nombres Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface" for="nombres">Nombres</label>
+<input aria-label="Nombres" class="w-full h-12 px-sm border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-200" id="nombres" name="nombres" placeholder="Tus nombres" required="" type="text"/>
+</div>
+<!-- Apellidos Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface" for="apellidos">Apellidos</label>
+<input aria-label="Apellidos" class="w-full h-12 px-sm border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-200" id="apellidos" name="apellidos" placeholder="Tus apellidos" required="" type="text"/>
+</div>
+<!-- Submit Button -->
+<button class="w-full mt-lg h-12 bg-primary-container text-on-primary rounded font-label-md text-label-md flex items-center justify-center hover:bg-primary transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" type="submit">
+                Ingresar
+            </button>
+</form>
+<!-- Optional Help Link -->
+<div class="mt-md text-center">
+<a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors duration-200" href="#">¿Necesitas ayuda?</a>
+</div>
+</main>
+</body></html>

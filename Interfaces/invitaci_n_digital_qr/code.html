@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Digital Invitation - Graduation Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#461599",
+                        "tertiary-fixed": "#ffdcc2",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-surface-variant": "#494453",
+                        "outline-variant": "#cbc3d5",
+                        "on-tertiary-container": "#ffb371",
+                        "surface-container-low": "#f3f3f5",
+                        "secondary": "#5f5e5e",
+                        "on-primary-fixed": "#24005b",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#e2dfde",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#eaddff",
+                        "inverse-on-surface": "#f0f0f2",
+                        "surface": "#f9f9fb",
+                        "on-secondary-container": "#636262",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary": "#5a2f00",
+                        "on-tertiary-fixed-variant": "#6d3a00",
+                        "on-primary-container": "#ceb8ff",
+                        "primary-container": "#5e35b1",
+                        "primary-fixed-dim": "#d1bcff",
+                        "inverse-primary": "#d1bcff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1d",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2f3132",
+                        "surface-container-highest": "#e2e2e4",
+                        "tertiary-fixed-dim": "#ffb77a",
+                        "on-primary-fixed-variant": "#5429a7",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#2e1500",
+                        "surface-dim": "#d9dadc",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f9f9fb",
+                        "surface-container": "#eeeef0",
+                        "secondary-fixed": "#e5e2e1",
+                        "background": "#f9f9fb",
+                        "surface-variant": "#e2e2e4",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#e8e8ea",
+                        "tertiary-container": "#7b4200",
+                        "on-surface": "#1a1c1d",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-tint": "#6c45c0",
+                        "outline": "#7b7484"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "base": "8px",
+                        "lg": "40px",
+                        "container-max": "1280px",
+                        "md": "24px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f9f9fb; /* surface */
+            font-family: 'Inter', sans-serif;
+            color: #1a1c1d; /* on-surface */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        /* Mobile specific styling to simulate a device if viewed on desktop */
+        @media (min-width: 768px) {
+            body {
+                align-items: center;
+                justify-content: center;
+                background-color: #e2e2e4; /* surface-variant for contrast on desktop */
+            }
+            .mobile-container {
+                width: 375px;
+                height: 812px;
+                background-color: #f9f9fb;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                border-radius: 2rem;
+            }
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body>
+<div class="mobile-container w-full min-h-screen flex flex-col md:min-h-0 md:h-[812px] relative bg-surface">
+<!-- Content Canvas (Main area, scrollable if needed) -->
+<main class="flex-1 overflow-y-auto pb-[90px] px-4 pt-8 md:px-lg md:pt-md flex flex-col items-center justify-center">
+<!-- Invitation Pass Card -->
+<div class="w-full max-w-sm bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm flex flex-col overflow-hidden relative">
+<!-- Top Notch / Cutout design element (Optional, adds to 'pass' feel) -->
+<div class="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-surface rounded-full border-b border-outline-variant z-10"></div>
+<!-- Header -->
+<div class="pt-8 pb-4 px-md flex flex-col items-center text-center border-b border-primary-fixed-dim border-opacity-30">
+<span class="material-symbols-outlined text-primary text-4xl mb-2" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<h1 class="font-headline-md-mobile text-headline-md-mobile text-on-surface mb-1">Invitación Oficial</h1>
+<p class="font-body-md text-body-md text-secondary">Presenta este código en la entrada</p>
+</div>
+<!-- Guest Details -->
+<div class="p-md flex flex-col gap-sm border-b border-primary-fixed-dim border-opacity-30">
+<div>
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-1">Invitado</p>
+<p class="font-body-lg text-body-lg text-on-surface font-semibold">Carlos Mendoza Ramírez</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-1">Ceremonia</p>
+<p class="font-body-md text-body-md text-on-surface">Graduación Facultad de Ingeniería 2024</p>
+</div>
+<div class="flex justify-between items-center gap-4">
+<div class="flex-1">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-1">Fecha y Hora</p>
+<p class="font-body-md text-body-md text-on-surface">15 Nov 2024, 10:00 AM</p>
+</div>
+<div class="flex-1 text-right">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-1">Ubicación</p>
+<p class="font-body-md text-body-md text-on-surface">Auditorio Principal, Sede Central</p>
+</div>
+</div>
+</div>
+<!-- QR Code Section -->
+<div class="p-lg flex flex-col items-center justify-center bg-surface-container-lowest">
+<!-- Simulating a high-contrast QR Code -->
+<div class="w-48 h-48 bg-on-surface flex items-center justify-center p-2 rounded-lg relative">
+<!-- Real QR would go here, using a placeholder styling -->
+<img class="w-full h-full object-cover rounded bg-white p-2" data-alt="A high contrast, scannable square QR code pattern in black and white, centered in a minimal corporate digital invitation layout. The design is strictly black and white for maximum legibility without any decorative elements." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwkiTRRhH8V681eRJ8XaNqF5kjAw7qinwhcwbo3fC5i3lD8fSaLetEq_pHg7ohbZZnPPuKyD0LMXPeFp-OaBc0GYZugUtKu6gWTo3NfDJbk597aR79dWpIU4bXAR-cgimKx1_u5qjaPP8WchVWJNZP4XcyTHXLmWKz49ZEX8-V1w9RUYVX11ZeqFifW4n_m4_LxlWR-DGa5puRUa8lefgLOxIWNUuNGUDaSTKkUO4KCmeNKEGhXdQF7VyU49To_pZfyiwNNiyjr3Me"/>
+<!-- Scanning corners decoration -->
+<div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary-container -ml-2 -mt-2"></div>
+<div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary-container -mr-2 -mt-2"></div>
+<div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary-container -ml-2 -mb-2"></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary-container -mr-2 -mb-2"></div>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mt-4 font-mono">ID: ENG-2024-CM789</p>
+</div>
+<!-- Action Area -->
+<div class="p-md bg-surface-container-low border-t border-outline-variant flex justify-center">
+<button class="w-full flex items-center justify-center gap-2 bg-transparent border border-primary-container text-primary-container font-label-md text-label-md py-3 px-6 rounded-DEFAULT hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors duration-200 h-[48px]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">download</span>
+                    Descargar invitación
+                </button>
+</div>
+<!-- Bottom notch (optional) -->
+<div class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-surface rounded-full border-t border-outline-variant z-10"></div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) - Using JSON definition -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-surface dark:bg-inverse-surface px-2 py-3 pb-safe border-t border-outline-variant dark:border-on-surface-variant shadow-md rounded-t-xl transition-all duration-200 ease-in-out">
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim font-label-sm text-label-sm active:bg-surface-container-highest transition-all duration-200 ease-in-out px-4 py-1 rounded-full group">
+<span class="material-symbols-outlined text-[24px] mb-1 group-hover:text-primary transition-colors" data-weight="regular">home</span>
+<span class="group-hover:text-primary transition-colors">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim font-label-sm text-label-sm active:bg-surface-container-highest transition-all duration-200 ease-in-out px-4 py-1 rounded-full group">
+<span class="material-symbols-outlined text-[24px] mb-1 group-hover:text-primary transition-colors" data-weight="regular">group</span>
+<span class="group-hover:text-primary transition-colors">Guests</span>
+</button>
+<!-- Active Tab: Invitation -->
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold bg-primary-fixed dark:bg-primary-container rounded-full px-4 py-1 font-label-sm text-label-sm transition-all duration-200 ease-in-out group">
+<span class="material-symbols-outlined text-[24px] mb-1 text-primary dark:text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+<span class="text-primary dark:text-primary-fixed-dim">Invitation</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim font-label-sm text-label-sm active:bg-surface-container-highest transition-all duration-200 ease-in-out px-4 py-1 rounded-full group">
+<span class="material-symbols-outlined text-[24px] mb-1 group-hover:text-primary transition-colors" data-weight="regular">person</span>
+<span class="group-hover:text-primary transition-colors">Profile</span>
+</button>
+</nav>
+</div>
+</body></html>
