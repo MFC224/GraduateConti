@@ -57,10 +57,12 @@ export default function AdminPanelPage() {
   const [ceremoniasProximas, setCeremoniasProximas] = useState<CeremoniaDetalle[]>([]);
   const [totalTogasPorDevolver, setTotalTogasPorDevolver] = useState(0);
   const [totalDnisEnCustodia, setTotalDnisEnCustodia] = useState(0);
+  const [totalEgresadosIngresados, setTotalEgresadosIngresados] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedCeremoniaId, setSelectedCeremoniaId] = useState<string | null>(null);
   const [perCeremonyTogas, setPerCeremonyTogas] = useState(0);
   const [perCeremonyDnis, setPerCeremonyDnis] = useState(0);
+  const [perCeremonyEgresadosIngresados, setPerCeremonyEgresadosIngresados] = useState(0);
   const [directInvitadosIngresados, setDirectInvitadosIngresados] = useState(0);
   const [directInvitadosLoading, setDirectInvitadosLoading] = useState(false);
   const [selectedCeremonyMeta, setSelectedCeremonyMeta] = useState<{ estado: string; conteo_final_invitados: number } | null>(null);
@@ -80,8 +82,13 @@ export default function AdminPanelPage() {
         .select("*", { count: "exact", head: true })
         .eq("ceremonia_id", selectedCeremoniaId)
         .eq("dni_retenido", true);
+      const { count: egrIngresados } = await (s.from("egresados") as any)
+        .select("*", { count: "exact", head: true })
+        .eq("ceremonia_id", selectedCeremoniaId)
+        .eq("ingreso_evento", true);
       setPerCeremonyTogas(togas ?? 0);
       setPerCeremonyDnis(dnis ?? 0);
+      setPerCeremonyEgresadosIngresados(egrIngresados ?? 0);
     })();
   }, [selectedCeremoniaId]);
 
@@ -298,6 +305,12 @@ export default function AdminPanelPage() {
         .in("ceremonia_id", ceremonyIds)
         .eq("dni_retenido", true);
       setTotalDnisEnCustodia(dnisCustodia ?? 0);
+
+      const { count: egrIngresadosTotal } = await (s.from("egresados") as any)
+        .select("*", { count: "exact", head: true })
+        .in("ceremonia_id", ceremonyIds)
+        .eq("ingreso_evento", true);
+      setTotalEgresadosIngresados(egrIngresadosTotal ?? 0);
     } catch {}
   }
 
@@ -308,8 +321,9 @@ export default function AdminPanelPage() {
   const displayInvitadosIngresados = selectedCeremonyMeta?.estado === "finalizada"
     ? (selectedCeremonyMeta.conteo_final_invitados ?? 0)
     : directInvitadosIngresados;
+  const displayEgresadosIngresados = selectedCeremoniaId ? perCeremonyEgresadosIngresados : totalEgresadosIngresados;
   const displayAforo = filteredResumenes.reduce((s, r) => s + r.aforo_total_invitados, 0);
-  const displayAforoLibre = Math.max(0, displayAforo - displayInvitadosIngresados);
+  const displayAforoLibre = Math.max(0, displayAforo - displayInvitadosIngresados - displayEgresadosIngresados);
   const displayTogas = selectedCeremoniaId ? perCeremonyTogas : totalTogasPorDevolver;
   const displayDnis = selectedCeremoniaId ? perCeremonyDnis : totalDnisEnCustodia;
 

@@ -46,6 +46,11 @@ export default function ResumenCeremonia({
         .eq("ceremonia_id", ceremoniaId)
         .not("equipo_entregado_at", "is", null);
 
+      const { count: egresadosIngresados } = await (s.from("egresados") as any)
+        .select("*", { count: "exact", head: true })
+        .eq("ceremonia_id", ceremoniaId)
+        .eq("ingreso_evento", true);
+
       const { count: togasPendientes } = await (s.from("egresados") as any)
         .select("id", { count: "exact", head: true })
         .eq("ceremonia_id", ceremoniaId)
@@ -58,15 +63,16 @@ export default function ResumenCeremonia({
         .eq("dni_retenido", true);
 
       const base = (data ?? {}) as Metricas;
+      const aforoLibreReal = Math.max(0, base.aforo_libre - (egresadosIngresados ?? 0));
       setM({
         ...base,
-        aforo_libre: Math.max(0, base.aforo_libre),
+        aforo_libre: aforoLibreReal,
         egresados_con_equipo: eqData?.length ?? 0,
         togas_por_devolver: togasPendientes ?? 0,
         dnis_en_custodia: dnisCustodia ?? 0,
       });
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ ...base, aforo_libre: Math.max(0, base.aforo_libre), egresados_con_equipo: eqData?.length ?? 0, togas_por_devolver: togasPendientes ?? 0, dnis_en_custodia: dnisCustodia ?? 0 }));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ...base, aforo_libre: aforoLibreReal, egresados_con_equipo: eqData?.length ?? 0, togas_por_devolver: togasPendientes ?? 0, dnis_en_custodia: dnisCustodia ?? 0 }));
       } catch {}
     } catch {
       try {

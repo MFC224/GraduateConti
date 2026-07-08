@@ -99,6 +99,7 @@ export default function OperarioPanelPage() {
 
   /* ───── Buscador egresados ───── */
   const [searchTerm, setSearchTerm] = useState("");
+  const [ordenSearchTerm, setOrdenSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<EgresadoConInvitados[]>([]);
   const [selectedEgresado, setSelectedEgresado] = useState<EgresadoConInvitados | null>(null);
   const [searching, setSearching] = useState(false);
@@ -128,7 +129,8 @@ export default function OperarioPanelPage() {
 
   const totalEgresados = fullEgresadosList.length;
   const invitadosIngresados = fullInvitadosList.filter(inv => inv.ingreso_at !== null).length;
-  const aforoLibre = Math.max(0, (ceremonyDetails?.aforo_total_invitados ?? 0) - invitadosIngresados);
+  const egresadosIngresados = fullEgresadosList.filter(egr => egr.ingreso_evento === true).length;
+  const aforoLibre = Math.max(0, (ceremonyDetails?.aforo_total_invitados ?? 0) - invitadosIngresados - egresadosIngresados);
   const togasPorDevolver = fullEgresadosList.filter(egr => egr.toga_entregada === true && egr.toga_devuelta === false).length;
   const dniRetenidos = fullEgresadosList.filter(egr => egr.dni_retenido === true).length;
 
@@ -136,12 +138,20 @@ export default function OperarioPanelPage() {
     const cumpleBusqueda = searchTerm
       ? (egr.dni.includes(searchTerm) || `${egr.nombres} ${egr.apellidos}`.toLowerCase().includes(searchTerm.toLowerCase()))
       : true;
+    const cumpleOrden = ordenSearchTerm
+      ? String(egr.numero_orden ?? "").includes(ordenSearchTerm)
+      : true;
     let cumpleMetrica = true;
     if (filtroMetrica === 'togas_pendientes') cumpleMetrica = (egr.toga_entregada === true && egr.toga_devuelta === false);
     if (filtroMetrica === 'dni_retenidos') cumpleMetrica = (egr.dni_retenido === true);
     if (filtroMetrica === 'ingresados') cumpleMetrica = (egr.ingreso_evento === true);
-    return cumpleBusqueda && cumpleMetrica;
+    return cumpleBusqueda && cumpleOrden && cumpleMetrica;
   });
+
+  const numerosFaltantes = fullEgresadosList
+    .filter(egr => egr.ingreso_evento === false && egr.numero_orden != null)
+    .map(egr => egr.numero_orden as number)
+    .sort((a, b) => a - b);
 
   /* ───── Offline detection ───── */
   useEffect(() => {
@@ -626,20 +636,57 @@ export default function OperarioPanelPage() {
         {/* ════════════ TAB 1: EGRESADOS ════════════ */}
         {activeTab === "egresados" && (
           <>
-            {/* Buscador */}
-            <section className="relative">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <Search className="text-gray-400 dark:text-slate-400" size={26} />
+            {/* ── Números Faltantes ── */}
+            {numerosFaltantes.length > 0 && (
+              <section className="bg-surface-container-low rounded-2xl p-4 border border-outline-variant">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                    Faltan ingresar ({numerosFaltantes.length})
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {numerosFaltantes.map(n => (
+                    <span
+                      key={n}
+                      className="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface text-xs font-bold flex items-center justify-center"
+                    >
+                      {n}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Buscadores */}
+            <section className="flex gap-3">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="text-gray-400 dark:text-slate-400" size={20} />
+                </div>
+                <input
+                  aria-label="Buscar por DNI o Apellidos"
+                  className="w-full h-14 pl-11 pr-4 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-600 rounded-2xl text-lg text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500"
+                  placeholder="Buscar por DNI o Apellidos..."
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
+                />
               </div>
-              <input
-                aria-label="Buscar por DNI o Apellidos"
-                className="w-full h-16 pl-14 pr-4 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-600 rounded-2xl text-xl text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500 shadow-lg"
-                placeholder="Buscar por DNI o Apellidos..."
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
-              />
+              <div className="relative w-36 shrink-0">
+                <input
+                  aria-label="Buscar por N° de Orden"
+                  className="w-full h-14 px-4 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-600 rounded-2xl text-lg text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500 text-center"
+                  placeholder="N° Orden"
+                  type="text"
+                  inputMode="numeric"
+                  value={ordenSearchTerm}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    setOrdenSearchTerm(v);
+                  }}
+                />
+              </div>
             </section>
 
             {/* ── Filtro activo banner ── */}
@@ -653,7 +700,7 @@ export default function OperarioPanelPage() {
                   }</strong>
                 </span>
                 <button
-                  onClick={() => { setFiltroMetrica('todos'); setSelectedEgresado(null); }}
+                  onClick={() => { setFiltroMetrica('todos'); setSelectedEgresado(null); setOrdenSearchTerm(""); setSearchTerm(""); }}
                   className="text-xs font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
                 >
                   Quitar filtro
@@ -895,7 +942,7 @@ export default function OperarioPanelPage() {
 
                 {/* Cerrar */}
                 <button
-                  onClick={() => { setSelectedEgresado(null); setSearchResults([]); }}
+                  onClick={() => { setSelectedEgresado(null); setSearchResults([]); setSearchTerm(""); setOrdenSearchTerm(""); }}
                   className="mt-5 w-full h-12 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 font-medium text-base hover:bg-gray-50 dark:hover:bg-slate-800 transition-all"
                 >
                   Cerrar — Buscar otro egresado

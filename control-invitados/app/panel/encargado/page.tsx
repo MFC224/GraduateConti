@@ -105,12 +105,17 @@ export default function EncargadoPanelPage() {
           .in("ceremonia_id", ids)
           .not("ingreso_at", "is", null);
 
+        const { count: consolidatedEgresados } = await (s.from("egresados") as any)
+          .select("*", { count: "exact", head: true })
+          .in("ceremonia_id", ids)
+          .eq("ingreso_evento", true);
+
         const totals = (resumen ?? []).reduce((acc: any, r: any) => ({
           totalEgresados: acc.totalEgresados + (r.total_egresados ?? 0),
           aforoTotal: acc.aforoTotal + (r.aforo_total_invitados ?? 0),
         }), { totalEgresados: 0, aforoTotal: 0 });
 
-        const consolidatedAforoLibre = Math.max(0, totals.aforoTotal - (consolidatedInvitados ?? 0));
+        const consolidatedAforoLibre = Math.max(0, totals.aforoTotal - (consolidatedInvitados ?? 0) - (consolidatedEgresados ?? 0));
 
         const { count: togas } = await (s.from("egresados") as any)
           .select("*", { count: "exact", head: true })
@@ -243,6 +248,11 @@ export default function EncargadoPanelPage() {
           .eq("ceremonia_id", ceremoniaActiva)
           .eq("dni_retenido", true);
 
+        const { count: egrIngresados } = await (s.from("egresados") as any)
+          .select("*", { count: "exact", head: true })
+          .eq("ceremonia_id", ceremoniaActiva)
+          .eq("ingreso_evento", true);
+
         const aforoTotal = cer?.aforo_total_invitados ?? 0;
         const invitadosIngresados = cer?.estado === "finalizada"
           ? (cer.conteo_final_invitados ?? 0)
@@ -251,7 +261,7 @@ export default function EncargadoPanelPage() {
         setKpiMetrics({
           totalEgresados: resumen?.total_egresados ?? 0,
           invitadosIngresados,
-          aforoLibre: Math.max(0, aforoTotal - invitadosIngresados),
+          aforoLibre: Math.max(0, aforoTotal - invitadosIngresados - (egrIngresados ?? 0)),
           togasPorDevolver: togas ?? 0,
           dnisRetenidos: dnis ?? 0,
         });

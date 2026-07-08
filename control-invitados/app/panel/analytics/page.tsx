@@ -90,15 +90,22 @@ export default function AnalyticsPage() {
 
         const ids = ceremonies.map((c: any) => c.id);
 
-        const [resData, sedesData] = await Promise.all([
+        const [resData, sedesData, egrData] = await Promise.all([
           (s.from("v_resumen_ceremonia") as any).select("*").in("ceremonia_id", ids),
           (s.from("sedes") as any).select("id, nombre").eq("activo", true),
+          (s.from("egresados") as any).select("ceremonia_id").in("ceremonia_id", ids).eq("ingreso_evento", true),
         ]);
 
         const sedeNombre = Object.fromEntries((sedesData?.data ?? []).map((se: any) => [se.id, se.nombre]));
 
+        const egrIngresadosMap: Record<string, number> = {};
+        (egrData?.data ?? []).forEach((e: any) => {
+          egrIngresadosMap[e.ceremonia_id] = (egrIngresadosMap[e.ceremonia_id] || 0) + 1;
+        });
+
         const rows: ResumenRow[] = (resData?.data ?? []).map((r: any) => {
           const cer = ceremonies.find((c: any) => c.id === r.ceremonia_id);
+          const aforoLibreReal = (r.aforo_libre ?? 0) - (egrIngresadosMap[r.ceremonia_id] ?? 0);
           return {
             ceremonia_id: r.ceremonia_id,
             ceremonia_nombre: r.ceremonia_nombre,
@@ -106,7 +113,7 @@ export default function AnalyticsPage() {
             total_egresados: r.total_egresados,
             invitados_aprobados: r.invitados_aprobados,
             invitados_ingresados: r.invitados_ingresados,
-            aforo_libre: r.aforo_libre,
+            aforo_libre: Math.max(0, aforoLibreReal),
             sede_nombre: sedeNombre[cer?.sede_id] ?? "—",
           };
         });
