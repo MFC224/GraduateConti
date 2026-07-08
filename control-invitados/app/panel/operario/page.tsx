@@ -157,23 +157,28 @@ export default function OperarioPanelPage() {
   }, []);
 
   /* ───── Sync offline queue ───── */
+  async function syncOfflineQueue(): Promise<boolean> {
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    if (!raw) return true;
+    const items = JSON.parse(raw);
+    if (!items.length) return true;
+    setSyncing(true);
+    const s = createClient();
+    for (const item of items) {
+      const { error } = await (s.from("invitados") as any)
+        .update({ ingreso_at: item.ingreso_at, ingresado_por: item.ingresado_por ?? currentUserId, metodo_ingreso: item.metodo_ingreso ?? "manual" })
+        .eq("id", item.invitado_id)
+        .is("ingreso_at", null);
+      if (error) { setSyncing(false); return false; }
+    }
+    localStorage.removeItem(OFFLINE_QUEUE_KEY);
+    setSyncing(false);
+    return true;
+  }
+
   useEffect(() => {
     if (!online) return;
-    const queue = localStorage.getItem(OFFLINE_QUEUE_KEY);
-    if (!queue) return;
-    const items = JSON.parse(queue);
-    if (!items.length) return;
-    (async () => {
-      setSyncing(true);
-      for (const item of items) {
-        try {
-          const s = createClient();
-          await (s.from("invitados") as any).update({ ingreso_at: item.ingreso_at }).eq("id", item.invitado_id);
-        } catch {}
-      }
-      localStorage.removeItem(OFFLINE_QUEUE_KEY);
-      setSyncing(false);
-    })();
+    syncOfflineQueue().then((ok) => { if (ok) fetchAllCeremonyData(); });
   }, [online]);
 
   /* ───── Load auth & ceremonies ───── */
@@ -363,24 +368,50 @@ export default function OperarioPanelPage() {
 
   useEffect(() => () => { stopScanner(); }, [stopScanner]);
 
-  /* ───── Marcar ingreso de invitado ───── */
+  /* ───── Marcar ingreso de invitado (síncrono estricto) ───── */
   async function markInvEntry(invId: string, metodo: "qr" | "dni" | "manual", qrFeedback?: { invitadoNombre: string; egresadoNombre: string; egresadoId: string }) {
-    const ingresoAt = nowPeruISO();
-    if (!online) {
-      const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]");
-      queue.push({ invitado_id: invId, ingreso_at: ingresoAt });
-      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-      setAlert({ type: "success", message: "Registrado offline. Sincronizará después." });
-      return;
-    }
+    if (updatingInv) return;
     setUpdatingInv(invId);
+    const ingresoAt = nowPeruISO();
     try {
+      if (!online) {
+        const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]");
+        queue.push({ invitado_id: invId, ingreso_at: ingresoAt, ingresado_por: currentUserId, metodo_ingreso: metodo });
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+        const syncOk = await syncOfflineQueue();
+        if (syncOk) {
+          if (selectedEgresado) {
+            const updated = selectedEgresado.invitados.map((inv) =>
+              inv.id === invId ? { ...inv, ingreso_at: ingresoAt } : inv
+            );
+            setSelectedEgresado({ ...selectedEgresado, invitados: updated });
+          }
+          if (dniSearchResult?.id === invId) {
+            setDniSearchResult({ ...dniSearchResult, ingreso_at: ingresoAt });
+          }
+          setFullInvitadosList(prev => prev.map(inv => inv.id === invId ? { ...inv, ingreso_at: ingresoAt } : inv));
+          fetchAllCeremonyData();
+          qrFeedback
+            ? setAlert({ type: "success", message: `Ingreso exitoso: ${qrFeedback.invitadoNombre}` })
+            : setAlert({ type: "success", message: "Ingreso registrado." });
+        } else {
+          setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+        }
+        setUpdatingInv(null);
+        return;
+      }
+
       const s = createClient();
       const { error } = await (s.from("invitados") as any)
         .update({ ingreso_at: ingresoAt, ingresado_por: currentUserId, metodo_ingreso: metodo })
         .eq("id", invId)
         .is("ingreso_at", null);
-      if (error) { setAlert({ type: "error", message: "Error al registrar." }); setUpdatingInv(null); return; }
+      if (error) {
+        setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+        setUpdatingInv(null);
+        return;
+      }
+
       if (selectedEgresado) {
         const updated = selectedEgresado.invitados.map((inv) =>
           inv.id === invId ? { ...inv, ingreso_at: ingresoAt } : inv
@@ -401,7 +432,9 @@ export default function OperarioPanelPage() {
         setAlert({ type: "success", message: "Ingreso registrado." });
       }
       fetchAllCeremonyData();
-    } catch { setAlert({ type: "error", message: "Error al registrar." }); }
+    } catch {
+      setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+    }
     setUpdatingInv(null);
   }
 
