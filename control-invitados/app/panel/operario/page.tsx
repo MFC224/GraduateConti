@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Table,
   FileText,
+  Lock,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Header from "@/components/Header";
@@ -130,8 +131,27 @@ export default function OperarioPanelPage() {
 
   const [fullEgresadosList, setFullEgresadosList] = useState<any[]>([]);
   const [fullInvitadosList, setFullInvitadosList] = useState<any[]>([]);
-  const [ceremonyDetails, setCeremonyDetails] = useState<{ aforo_total_invitados: number } | null>(null);
+  const [ceremonyDetails, setCeremonyDetails] = useState<{ aforo_total_invitados: number; asientos_bloqueados: number } | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
+
+  /* ───── Ajuste manual de aforo (asientos_bloqueados) ───── */
+  const [showAforoControl, setShowAforoControl] = useState(false);
+  const [manualBlockInput, setManualBlockInput] = useState("");
+
+  async function handleAdjustAforo(delta: number) {
+    if (!selectedCeremoniaId || !ceremonyDetails) return;
+    const nuevo = Math.max(0, (ceremonyDetails.asientos_bloqueados ?? 0) + delta);
+    try {
+      const s = createClient();
+      await (s.from("ceremonias") as any)
+        .update({ asientos_bloqueados: nuevo })
+        .eq("id", selectedCeremoniaId);
+      setCeremonyDetails({ ...ceremonyDetails, asientos_bloqueados: nuevo });
+      setAlert({ type: "success", message: `Aforo bloqueado ajustado a ${nuevo} asientos.` });
+    } catch {
+      setAlert({ type: "error", message: "Error de red al ajustar aforo." });
+    }
+  }
 
   /* ───── Filtro rápido desde KPIs ───── */
   const [filtroMetrica, setFiltroMetrica] = useState<'todos' | 'togas_pendientes' | 'dni_retenidos' | 'ingresados'>('todos');
@@ -139,7 +159,7 @@ export default function OperarioPanelPage() {
   const totalEgresados = fullEgresadosList.length;
   const invitadosIngresados = fullInvitadosList.filter(inv => inv.ingreso_at !== null).length;
   const egresadosIngresados = fullEgresadosList.filter(egr => egr.ingreso_evento === true || egr.confirmado_asistencia === true).length;
-  const aforoLibre = Math.max(0, 180 - invitadosIngresados - egresadosIngresados);
+  const aforoLibre = Math.max(0, 180 - invitadosIngresados - egresadosIngresados - (ceremonyDetails?.asientos_bloqueados ?? 0));
   const togasPorDevolver = fullEgresadosList.filter(egr => egr.toga_entregada === true && egr.toga_devuelta === false).length;
   const dniRetenidos = fullEgresadosList.filter(egr => egr.dni_retenido === true).length;
 
@@ -277,7 +297,7 @@ export default function OperarioPanelPage() {
           .select("id, egresado_id, nombres, apellidos, dni, estado, ingreso_at, qr_token")
           .eq("ceremonia_id", selectedCeremoniaId),
         (s.from("ceremonias") as any)
-          .select("aforo_total_invitados")
+          .select("aforo_total_invitados, asientos_bloqueados")
           .eq("id", selectedCeremoniaId)
           .single(),
       ]);
@@ -1160,12 +1180,18 @@ export default function OperarioPanelPage() {
             ] as { label: string; value: number; icon: any; filtro: 'todos' | 'togas_pendientes' | 'dni_retenidos' | null }[]).map((c) => {
               const handleClick = () => {
                 if (c.label === "Total Egresados") {
+                  setShowAforoControl(false);
                   setSearchTerm("");
                   setOrdenSearchTerm("");
                   setSelectedEgresado(null);
                   setFiltroMetrica("todos");
                   return;
                 }
+                if (c.label === "Aforo Libre") {
+                  setShowAforoControl(prev => !prev);
+                  return;
+                }
+                setShowAforoControl(false);
                 setSelectedEgresado(null);
                 const f = c.filtro;
                 if (f) setFiltroMetrica(filtroMetrica === f ? 'todos' : f);
@@ -1195,6 +1221,47 @@ export default function OperarioPanelPage() {
               );
             })}
           </div>
+        )}
+
+        {/* ── Ajuste Manual de Aforo (inline) ── */}
+        {showAforoControl && ceremonyDetails && (
+          <section className="mb-6 p-4 rounded-2xl border-2 border-primary/20 bg-surface-container-low">
+            <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Lock size={16} className="text-primary" />
+              Ajuste Manual de Aforo
+            </h3>
+            <p className="text-sm text-on-surface-variant mb-3">
+              Asientos bloqueados actualmente: <strong>{ceremonyDetails.asientos_bloqueados}</strong>
+            </p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <button onClick={() => handleAdjustAforo(-5)} className="h-10 px-4 rounded-xl border-2 border-red-300 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/40 transition-all cursor-pointer">-5 Sillas</button>
+              <button onClick={() => handleAdjustAforo(-10)} className="h-10 px-4 rounded-xl border-2 border-red-300 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/40 transition-all cursor-pointer">-10 Sillas</button>
+              <button onClick={() => handleAdjustAforo(5)} className="h-10 px-4 rounded-xl border-2 border-green-300 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 font-bold text-sm hover:bg-green-100 dark:hover:bg-green-900/40 transition-all cursor-pointer">+5 Sillas</button>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                placeholder="Cantidad exacta"
+                value={manualBlockInput}
+                onChange={(e) => setManualBlockInput(e.target.value.replace(/\D/g, ""))}
+                className="w-36 h-10 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-white px-3 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none"
+              />
+              <button
+                onClick={() => {
+                  const v = parseInt(manualBlockInput, 10);
+                  if (!isNaN(v) && v >= 0) {
+                    handleAdjustAforo(v - (ceremonyDetails.asientos_bloqueados ?? 0));
+                    setManualBlockInput("");
+                  }
+                }}
+                disabled={!manualBlockInput}
+                className="h-10 px-4 rounded-xl border-2 border-primary/40 text-primary font-bold text-sm hover:bg-primary/5 hover:border-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Establecer
+              </button>
+            </div>
+          </section>
         )}
 
         </>
