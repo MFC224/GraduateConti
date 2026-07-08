@@ -20,6 +20,7 @@ import {
   Calendar,
   ChevronDown,
   Table,
+  FileText,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Header from "@/components/Header";
@@ -60,6 +61,7 @@ type EgresadoConInvitados = {
   toga_entregada: boolean;
   hora_toga_entregada: string | null;
   hora_toga_devuelta: string | null;
+  observaciones: string | null;
   invitados: {
     id: string;
     nombres: string;
@@ -106,6 +108,13 @@ export default function OperarioPanelPage() {
 
   /* ───── Invitados list ───── */
   const [updatingInv, setUpdatingInv] = useState<string | null>(null);
+
+  /* ───── Observaciones por egresado ───── */
+  const [observacionesNota, setObservacionesNota] = useState("");
+
+  useEffect(() => {
+    setObservacionesNota(selectedEgresado?.observaciones ?? "");
+  }, [selectedEgresado]);
 
   /* ───── Last minute guest modal ───── */
   const [showLastMinuteModal, setShowLastMinuteModal] = useState(false);
@@ -262,7 +271,7 @@ export default function OperarioPanelPage() {
       const s = createClient();
       const [egresadosRes, invitadosRes, ceremoniaRes] = await Promise.all([
         (s.from("egresados") as any)
-          .select("id, nombres, apellidos, dni, numero_orden, equipo_entregado_at, dni_retenido, toga_devuelta, confirmado_asistencia, ingreso_evento, toga_entregada, hora_toga_entregada, hora_toga_devuelta")
+          .select("id, nombres, apellidos, dni, numero_orden, equipo_entregado_at, dni_retenido, toga_devuelta, confirmado_asistencia, ingreso_evento, toga_entregada, hora_toga_entregada, hora_toga_devuelta, observaciones")
           .eq("ceremonia_id", selectedCeremoniaId),
         (s.from("invitados") as any)
           .select("id, egresado_id, nombres, apellidos, dni, estado, ingreso_at, qr_token")
@@ -288,7 +297,7 @@ export default function OperarioPanelPage() {
     try {
       const s = createClient();
       let query = (s.from("egresados") as any)
-        .select("id, nombres, apellidos, dni, numero_orden, equipo_entregado_at, equipo_entregado_por, dni_retenido, dni_devuelto_at, toga_devuelta, confirmado_asistencia, ingreso_evento, toga_entregada, hora_toga_entregada, hora_toga_devuelta")
+        .select("id, nombres, apellidos, dni, numero_orden, equipo_entregado_at, equipo_entregado_por, dni_retenido, dni_devuelto_at, toga_devuelta, confirmado_asistencia, ingreso_evento, toga_entregada, hora_toga_entregada, hora_toga_devuelta, observaciones")
         .eq("ceremonia_id", selectedCeremoniaId);
       if (/^\d{1,8}$/.test(term)) {
         query = query.eq("dni", term);
@@ -474,6 +483,37 @@ export default function OperarioPanelPage() {
       setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, ingreso_evento: true } : egr));
       fetchAllCeremonyData();
     } catch {}
+  }
+
+  async function handleAnularIngreso() {
+    if (!selectedEgresado) return;
+    try {
+      const s = createClient();
+      await (s.from("egresados") as any)
+        .update({ ingreso_evento: false })
+        .eq("id", selectedEgresado.id);
+      setSelectedEgresado({ ...selectedEgresado, ingreso_evento: false });
+      setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, ingreso_evento: false } : egr));
+      fetchAllCeremonyData();
+      setAlert({ type: "success", message: "Ingreso anulado. El egresado vuelve a la lista de faltantes." });
+    } catch {
+      setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+    }
+  }
+
+  async function handleSaveObservaciones() {
+    if (!selectedEgresado) return;
+    try {
+      const s = createClient();
+      await (s.from("egresados") as any)
+        .update({ observaciones: observacionesNota || null })
+        .eq("id", selectedEgresado.id);
+      setSelectedEgresado({ ...selectedEgresado, observaciones: observacionesNota || null });
+      setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, observaciones: observacionesNota || null } : egr));
+      setAlert({ type: "success", message: "Observación guardada." });
+    } catch {
+      setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+    }
   }
 
   async function handleEntregarToga() {
@@ -799,8 +839,13 @@ export default function OperarioPanelPage() {
                     <span className="text-4xl font-black text-purple-700 dark:text-purple-300">{selectedEgresado.numero_orden ?? "?"}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white truncate">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white truncate flex items-center gap-2">
                       {selectedEgresado.apellidos}, {selectedEgresado.nombres}
+                      {selectedEgresado.observaciones && (
+                        <span title="Tiene observaciones" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                          <FileText size={12} /> Nota
+                        </span>
+                      )}
                     </h2>
                     <p className="text-base text-gray-500 dark:text-slate-400">DNI: {selectedEgresado.dni}</p>
                   </div>
@@ -822,23 +867,24 @@ export default function OperarioPanelPage() {
                         </div>
                       )}
 
-                      {/* Marcar Ingreso a Campus */}
-                      <button
-                        onClick={handleMarcarIngreso}
-                        disabled={selectedEgresado.ingreso_evento}
-                        className={`w-full h-14 rounded-2xl border-2 text-base font-bold flex items-center justify-center gap-3 transition-all ${
-                          selectedEgresado.ingreso_evento
-                            ? "bg-blue-100 dark:bg-blue-900/40 border-blue-400 text-blue-800 dark:text-blue-200"
-                            : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-300 hover:border-primary"
-                        } ${selectedEgresado.ingreso_evento ? "cursor-default" : "cursor-pointer"}`}
-                      >
-                        <User size={24} className={
-                          selectedEgresado.ingreso_evento
-                            ? "text-blue-600 dark:text-blue-400"
-                            : "text-gray-300 dark:text-slate-500"
-                        } />
-                        {selectedEgresado.ingreso_evento ? "Ingreso Registrado" : "Marcar Ingreso a Campus"}
-                      </button>
+                      {/* Marcar / Anular Ingreso a Campus */}
+                      {selectedEgresado.ingreso_evento ? (
+                        <button
+                          onClick={handleAnularIngreso}
+                          className="w-full h-14 rounded-2xl border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-base font-bold flex items-center justify-center gap-3 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all cursor-pointer"
+                        >
+                          <XCircle size={24} />
+                          Anular Ingreso
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleMarcarIngreso}
+                          className="w-full h-14 rounded-2xl border-2 border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-300 text-base font-bold flex items-center justify-center gap-3 hover:border-primary transition-all cursor-pointer"
+                        >
+                          <User size={24} className="text-gray-300 dark:text-slate-500" />
+                          Marcar Ingreso a Campus
+                        </button>
+                      )}
 
                       {/* Entregar Toga y Retener DNI */}
                       <button
@@ -892,6 +938,29 @@ export default function OperarioPanelPage() {
                     </div>
                   </div>
                 )}
+
+                {/* ── Observaciones Internas ── */}
+                <div className="border-t-2 border-gray-100 dark:border-slate-700 pt-5 mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FileText size={18} />
+                    Observaciones Internas
+                  </h3>
+                  <textarea
+                    value={observacionesNota}
+                    onChange={(e) => setObservacionesNota(e.target.value)}
+                    placeholder="Ej: Dejó pasaporte en vez de DNI, no trajo invitados, etc."
+                    rows={3}
+                    className="w-full resize-none rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-surface-container-lowest text-sm text-gray-900 dark:text-white p-3 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500 transition-all"
+                  />
+                  <button
+                    onClick={handleSaveObservaciones}
+                    disabled={observacionesNota === (selectedEgresado.observaciones ?? "")}
+                    className="mt-2 h-10 px-5 rounded-xl border-2 border-primary/40 text-primary font-bold text-sm flex items-center gap-2 hover:bg-primary/5 hover:border-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <CheckCircle size={16} />
+                    Guardar Nota
+                  </button>
+                </div>
 
                 {/* ── Invitados ── */}
                 <div className="border-t-2 border-gray-100 dark:border-slate-700 pt-5">
@@ -1090,6 +1159,13 @@ export default function OperarioPanelPage() {
               { label: "DNIs Retenidos", value: dniRetenidos, icon: Shield, filtro: 'dni_retenidos' as const },
             ] as { label: string; value: number; icon: any; filtro: 'todos' | 'togas_pendientes' | 'dni_retenidos' | null }[]).map((c) => {
               const handleClick = () => {
+                if (c.label === "Total Egresados") {
+                  setSearchTerm("");
+                  setOrdenSearchTerm("");
+                  setSelectedEgresado(null);
+                  setFiltroMetrica("todos");
+                  return;
+                }
                 setSelectedEgresado(null);
                 const f = c.filtro;
                 if (f) setFiltroMetrica(filtroMetrica === f ? 'todos' : f);
