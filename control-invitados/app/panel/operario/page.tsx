@@ -564,6 +564,22 @@ export default function OperarioPanelPage() {
     } catch {}
   }
 
+  async function handleUndoDevolucion() {
+    if (!selectedEgresado) return;
+    try {
+      const s = createClient();
+      await (s.from("egresados") as any)
+        .update({ toga_devuelta: false, hora_toga_devuelta: null })
+        .eq("id", selectedEgresado.id);
+      setSelectedEgresado({ ...selectedEgresado, toga_devuelta: false, hora_toga_devuelta: null });
+      setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, toga_devuelta: false, hora_toga_devuelta: null } : egr));
+      fetchAllCeremonyData();
+      setAlert({ type: "success", message: "Devolución anulada correctamente." });
+    } catch {
+      setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+    }
+  }
+
   /* ───── Last minute guest (vinculado al egresado seleccionado) ───── */
   async function addLastMinuteGuest() {
     const dni = lmDni.trim();
@@ -948,14 +964,23 @@ export default function OperarioPanelPage() {
 
                 {/* ── EQUIPO COMPLETADO ── */}
                 {selectedEgresado.toga_devuelta && (
-                  <div className="mb-6 p-4 rounded-2xl bg-green-100 dark:bg-green-900/40 border-2 border-green-400 text-green-800 dark:text-green-200 flex items-center gap-3">
-                    <CheckCircle size={28} className="text-green-600 dark:text-green-400 shrink-0" />
-                    <div>
-                      <p className="text-lg font-bold">Proceso Completado</p>
-                      <p className="text-sm">
-                        Toga Recibida — DNI Devuelto {toPeruTime(selectedEgresado.hora_toga_devuelta)}
-                      </p>
+                  <div className="mb-6">
+                    <div className="p-4 rounded-2xl bg-green-100 dark:bg-green-900/40 border-2 border-green-400 text-green-800 dark:text-green-200 flex items-center gap-3 mb-3">
+                      <CheckCircle size={28} className="text-green-600 dark:text-green-400 shrink-0" />
+                      <div>
+                        <p className="text-lg font-bold">Proceso Completado</p>
+                        <p className="text-sm">
+                          Toga Recibida — DNI Devuelto {toPeruTime(selectedEgresado.hora_toga_devuelta)}
+                        </p>
+                      </div>
                     </div>
+                    <button
+                      onClick={handleUndoDevolucion}
+                      className="w-full h-14 rounded-2xl border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-base font-bold flex items-center justify-center gap-3 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all cursor-pointer"
+                    >
+                      <Undo2 size={24} />
+                      Anular Devolución
+                    </button>
                   </div>
                 )}
 
