@@ -129,8 +129,8 @@ export default function OperarioPanelPage() {
 
   const totalEgresados = fullEgresadosList.length;
   const invitadosIngresados = fullInvitadosList.filter(inv => inv.ingreso_at !== null).length;
-  const egresadosIngresados = fullEgresadosList.filter(egr => egr.ingreso_evento === true).length;
-  const aforoLibre = Math.max(0, (ceremonyDetails?.aforo_total_invitados ?? 0) - invitadosIngresados - egresadosIngresados);
+  const egresadosIngresados = fullEgresadosList.filter(egr => egr.ingreso_evento === true || egr.confirmado_asistencia === true).length;
+  const aforoLibre = Math.max(0, 180 - invitadosIngresados - egresadosIngresados);
   const togasPorDevolver = fullEgresadosList.filter(egr => egr.toga_entregada === true && egr.toga_devuelta === false).length;
   const dniRetenidos = fullEgresadosList.filter(egr => egr.dni_retenido === true).length;
 
@@ -138,20 +138,34 @@ export default function OperarioPanelPage() {
     const cumpleBusqueda = searchTerm
       ? (egr.dni.includes(searchTerm) || `${egr.nombres} ${egr.apellidos}`.toLowerCase().includes(searchTerm.toLowerCase()))
       : true;
-    const cumpleOrden = ordenSearchTerm
-      ? String(egr.numero_orden ?? "").includes(ordenSearchTerm)
-      : true;
     let cumpleMetrica = true;
     if (filtroMetrica === 'togas_pendientes') cumpleMetrica = (egr.toga_entregada === true && egr.toga_devuelta === false);
     if (filtroMetrica === 'dni_retenidos') cumpleMetrica = (egr.dni_retenido === true);
     if (filtroMetrica === 'ingresados') cumpleMetrica = (egr.ingreso_evento === true);
-    return cumpleBusqueda && cumpleOrden && cumpleMetrica;
+    return cumpleBusqueda && cumpleMetrica;
   });
 
   const numerosFaltantes = fullEgresadosList
     .filter(egr => egr.ingreso_evento === false && egr.numero_orden != null)
-    .map(egr => egr.numero_orden as number)
-    .sort((a, b) => a - b);
+    .map(egr => ({ id: egr.id, numero_orden: egr.numero_orden as number }))
+    .sort((a, b) => a.numero_orden - b.numero_orden);
+
+  async function selectByNumeroOrden(numero: number) {
+    const egresado = fullEgresadosList.find(egr => egr.numero_orden === numero);
+    if (!egresado) {
+      setAlert({ type: "error", message: `N° de orden ${numero} no encontrado.` });
+      return;
+    }
+    try {
+      const s = createClient();
+      const { data: invs } = await (s.from("invitados") as any)
+        .select("id, nombres, apellidos, dni, estado, ingreso_at, qr_token")
+        .eq("egresado_id", egresado.id);
+      setSelectedEgresado({ ...egresado, invitados: invs ?? [] });
+    } catch {
+      setAlert({ type: "error", message: "Error al buscar invitados." });
+    }
+  }
 
   /* ───── Offline detection ───── */
   useEffect(() => {
@@ -636,7 +650,7 @@ export default function OperarioPanelPage() {
         {/* ════════════ TAB 1: EGRESADOS ════════════ */}
         {activeTab === "egresados" && (
           <>
-            {/* ── Números Faltantes ── */}
+            {/* ── Números Faltantes (botonera interactiva) ── */}
             {numerosFaltantes.length > 0 && (
               <section className="bg-surface-container-low rounded-2xl p-4 border border-outline-variant">
                 <div className="flex items-center justify-between mb-2">
@@ -645,13 +659,14 @@ export default function OperarioPanelPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {numerosFaltantes.map(n => (
-                    <span
-                      key={n}
-                      className="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface text-xs font-bold flex items-center justify-center"
+                  {numerosFaltantes.map(({ id, numero_orden }) => (
+                    <button
+                      key={id}
+                      onClick={() => selectByNumeroOrden(numero_orden)}
+                      className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-primary/10 text-on-surface border border-outline/20 font-bold transition-colors active:scale-95 shadow-sm text-sm flex items-center justify-center"
                     >
-                      {n}
-                    </span>
+                      {numero_orden}
+                    </button>
                   ))}
                 </div>
               </section>
@@ -684,6 +699,13 @@ export default function OperarioPanelPage() {
                   onChange={(e) => {
                     const v = e.target.value.replace(/\D/g, "");
                     setOrdenSearchTerm(v);
+                  }}
+                  onKeyDown={async (e) => {
+                    if (e.key !== "Enter") return;
+                    const num = parseInt(ordenSearchTerm, 10);
+                    if (isNaN(num)) return;
+                    setOrdenSearchTerm("");
+                    await selectByNumeroOrden(num);
                   }}
                 />
               </div>

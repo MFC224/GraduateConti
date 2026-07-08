@@ -49,7 +49,7 @@ export default function ResumenCeremonia({
       const { count: egresadosIngresados } = await (s.from("egresados") as any)
         .select("*", { count: "exact", head: true })
         .eq("ceremonia_id", ceremoniaId)
-        .eq("ingreso_evento", true);
+        .or("ingreso_evento.eq.true,confirmado_asistencia.eq.true");
 
       const { count: togasPendientes } = await (s.from("egresados") as any)
         .select("id", { count: "exact", head: true })
@@ -63,7 +63,7 @@ export default function ResumenCeremonia({
         .eq("dni_retenido", true);
 
       const base = (data ?? {}) as Metricas;
-      const aforoLibreReal = Math.max(0, base.aforo_libre - (egresadosIngresados ?? 0));
+      const aforoLibreReal = Math.max(0, 180 - (base.invitados_ingresados ?? 0) - (egresadosIngresados ?? 0));
       setM({
         ...base,
         aforo_libre: aforoLibreReal,
