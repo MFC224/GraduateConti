@@ -336,7 +336,8 @@ export default function EncargadoPanelPage() {
   }
 
   return (
-    <div className="bg-surface-container-low dark:bg-slate-950 text-on-surface dark:text-white font-body-md antialiased min-h-screen overflow-hidden flex">
+    <>
+    <div className="bg-surface-container-low dark:bg-slate-950 text-on-surface dark:text-white font-body-md antialiased min-h-screen flex">
       <Header />
       {/* ── Sidebar ── */}
       <nav className="hidden md:flex flex-col w-64 h-[calc(100vh-64px)] fixed left-0 top-16 p-md gap-base bg-surface-container-lowest dark:bg-slate-900 border-r border-outline-variant dark:border-slate-700 z-40 pointer-events-auto">
@@ -394,7 +395,7 @@ export default function EncargadoPanelPage() {
       </nav>
 
       {/* ── Main ── */}
-      <main className="flex-1 ml-0 md:ml-64 flex flex-col overflow-y-auto pt-16 pb-20 md:pb-0">
+      <main className="flex-1 ml-0 md:ml-64 flex flex-col overflow-y-auto pt-16 pb-24 md:pb-0">
         {/* Header */}
         <header className="px-4 md:px-xl py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeUp">
           <div>
@@ -617,32 +618,34 @@ export default function EncargadoPanelPage() {
           </div>
           </div>
 
-      {/* ── Mobile Bottom Nav ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-2 py-2 shadow-md">
-        {[
-          { href: "/panel/encargado", icon: LayoutDashboard, label: "Dashboard" },
-          { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
-          { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
-          { href: "/panel/settings", icon: Settings, label: "Config" },
-        ].map(({ href, icon: Icon, label }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
-                isActive
-                  ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
-                  : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
-              }`}
-            >
-              <Icon size={22} />
-              <span className="text-[10px] font-medium">{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
       </main>
     </div>
+
+    {/* ── Mobile Bottom Nav ── */}
+    <nav className="md:hidden fixed bottom-0 left-0 w-full z-[100] touch-action-manipulation pointer-events-auto flex justify-around items-center bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-2 py-2 shadow-md">
+      {[
+        { href: "/panel/encargado", icon: LayoutDashboard, label: "Dashboard" },
+        { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
+        { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
+        { href: "/panel/settings", icon: Settings, label: "Config" },
+      ].map(({ href, icon: Icon, label }) => {
+        const isActive = pathname === href;
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+              isActive
+                ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
+                : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+            }`}
+          >
+            <Icon size={22} />
+            <span className="text-[10px] font-medium">{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+    </>
   );
 }

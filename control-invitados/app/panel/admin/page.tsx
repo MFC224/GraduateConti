@@ -384,11 +384,12 @@ export default function AdminPanelPage() {
   }));
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
+    <>
+    <div className="flex h-screen md:min-h-screen bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
 
       {/* ── Main Content Area ── */}
-      <div className="flex-1 overflow-y-auto p-8 pb-20 md:pb-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto p-8 pb-24 md:pb-8 animate-fadeUp">
         {/* ── Executive Dashboard ── */}
         <section className="mb-12">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -676,182 +677,183 @@ export default function AdminPanelPage() {
           </div>
         </section>
       </div>
+    </div>
 
-      {/* ── Mobile Bottom Nav ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-2 py-2 shadow-md">
-        {[
-          { href: "/panel/admin", icon: LayoutDashboard, label: "Dashboard" },
-          { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
-          { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
-          { href: "/panel/settings", icon: Settings, label: "Config" },
-        ].map(({ href, icon: Icon, label }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
-                isActive
-                  ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
-                  : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
-              }`}
+    {/* ── Mobile Bottom Nav ── */}
+    <nav className="md:hidden fixed bottom-0 left-0 w-full z-[100] touch-action-manipulation pointer-events-auto flex justify-around items-center bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-2 py-2 shadow-md">
+      {[
+        { href: "/panel/admin", icon: LayoutDashboard, label: "Dashboard" },
+        { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
+        { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
+        { href: "/panel/settings", icon: Settings, label: "Config" },
+      ].map(({ href, icon: Icon, label }) => {
+        const isActive = pathname === href;
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+              isActive
+                ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
+                : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+            }`}
+          >
+            <Icon size={22} />
+            <span className="text-[10px] font-medium">{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+
+    {/* ── Toast Notification ── */}
+    {toast && (
+      <div className="fixed top-4 right-4 z-[100] animate-fadeUp">
+        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg border ${
+          toast.type === "success"
+            ? "bg-[#E8F5E9] border-[#A5D6A7] text-[#2E7D32] dark:bg-green-900/50 dark:border-green-700 dark:text-green-300"
+            : "bg-error-container border-error text-on-error-container dark:bg-red-900/50 dark:border-red-700 dark:text-red-300"
+        }`}>
+          <span className="font-body-md text-body-md">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100 transition-opacity">
+            &times;
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* ── Modal: Crear Usuario ── */}
+    {showCreateUser && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 animate-fadeUp max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Crear Nuevo Usuario</h3>
+            <button onClick={() => setShowCreateUser(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nombres *</label>
+                <input
+                  type="text"
+                  value={newUser.nombres}
+                  onChange={(e) => setNewUser({ ...newUser, nombres: e.target.value })}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  placeholder="Nombres"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Apellidos *</label>
+                <input
+                  type="text"
+                  value={newUser.apellidos}
+                  onChange={(e) => setNewUser({ ...newUser, apellidos: e.target.value })}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  placeholder="Apellidos"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email *</label>
+              <input
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Contraseña temporal</label>
+                <input
+                  type="text"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">DNI</label>
+                <input
+                  type="text"
+                  value={newUser.dni}
+                  onChange={(e) => setNewUser({ ...newUser, dni: e.target.value })}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  placeholder="Opcional"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Rol *</label>
+                {currentUserRol === "admin_general" ? (
+                  <select
+                    value={newUser.rol}
+                    onChange={(e) => setNewUser({ ...newUser, rol: e.target.value })}
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  >
+                    <option value="admin_general">Admin General</option>
+                    <option value="encargado">Encargado</option>
+                    <option value="operario">Operario</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value="Operario"
+                    disabled
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 rounded-xl px-4 py-2.5 text-sm cursor-not-allowed"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Sede</label>
+                {currentUserRol === "encargado" ? (
+                  <input
+                    type="text"
+                    value={sedesMap[currentUserSedeId ?? ""] ?? "Sin sede"}
+                    disabled
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 rounded-xl px-4 py-2.5 text-sm cursor-not-allowed"
+                  />
+                ) : (
+                  <select
+                    value={newUser.sede_id}
+                    onChange={(e) => setNewUser({ ...newUser, sede_id: e.target.value })}
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  >
+                    <option value="">Todas las sedes</option>
+                    {sedes.map((s) => (
+                      <option key={s.id} value={s.id}>{s.nombre}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-8">
+            <button
+              onClick={() => setShowCreateUser(false)}
+              className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
             >
-              <Icon size={22} />
-              <span className="text-[10px] font-medium">{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* ── Toast Notification ── */}
-      {toast && (
-        <div className="fixed top-4 right-4 z-[100] animate-fadeUp">
-          <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg border ${
-            toast.type === "success"
-              ? "bg-[#E8F5E9] border-[#A5D6A7] text-[#2E7D32] dark:bg-green-900/50 dark:border-green-700 dark:text-green-300"
-              : "bg-error-container border-error text-on-error-container dark:bg-red-900/50 dark:border-red-700 dark:text-red-300"
-          }`}>
-            <span className="font-body-md text-body-md">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100 transition-opacity">
-              &times;
+              Cancelar
+            </button>
+            <button
+              onClick={handleCreateUser}
+              disabled={creating}
+              className="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {creating ? "Creando..." : "Crear Usuario"}
             </button>
           </div>
         </div>
-      )}
-
-      {/* ── Modal: Crear Usuario ── */}
-      {showCreateUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 animate-fadeUp max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Crear Nuevo Usuario</h3>
-              <button onClick={() => setShowCreateUser(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nombres *</label>
-                  <input
-                    type="text"
-                    value={newUser.nombres}
-                    onChange={(e) => setNewUser({ ...newUser, nombres: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                    placeholder="Nombres"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Apellidos *</label>
-                  <input
-                    type="text"
-                    value={newUser.apellidos}
-                    onChange={(e) => setNewUser({ ...newUser, apellidos: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                    placeholder="Apellidos"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email *</label>
-                <input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                  placeholder="correo@ejemplo.com"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Contraseña temporal</label>
-                  <input
-                    type="text"
-                    value={newUser.password}
-                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">DNI</label>
-                  <input
-                    type="text"
-                    value={newUser.dni}
-                    onChange={(e) => setNewUser({ ...newUser, dni: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                    placeholder="Opcional"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Rol *</label>
-                  {currentUserRol === "admin_general" ? (
-                    <select
-                      value={newUser.rol}
-                      onChange={(e) => setNewUser({ ...newUser, rol: e.target.value })}
-                      className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                    >
-                      <option value="admin_general">Admin General</option>
-                      <option value="encargado">Encargado</option>
-                      <option value="operario">Operario</option>
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value="Operario"
-                      disabled
-                      className="w-full border border-gray-200 dark:border-slate-600 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 rounded-xl px-4 py-2.5 text-sm cursor-not-allowed"
-                    />
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Sede</label>
-                  {currentUserRol === "encargado" ? (
-                    <input
-                      type="text"
-                      value={sedesMap[currentUserSedeId ?? ""] ?? "Sin sede"}
-                      disabled
-                      className="w-full border border-gray-200 dark:border-slate-600 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 rounded-xl px-4 py-2.5 text-sm cursor-not-allowed"
-                    />
-                  ) : (
-                    <select
-                      value={newUser.sede_id}
-                      onChange={(e) => setNewUser({ ...newUser, sede_id: e.target.value })}
-                      className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                    >
-                      <option value="">Todas las sedes</option>
-                      {sedes.map((s) => (
-                        <option key={s.id} value={s.id}>{s.nombre}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-8">
-              <button
-                onClick={() => setShowCreateUser(false)}
-                className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreateUser}
-                disabled={creating}
-                className="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2"
-              >
-                {creating ? "Creando..." : "Crear Usuario"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+    )}
+    </>
   );
 }
