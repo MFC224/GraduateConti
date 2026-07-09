@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -80,6 +82,7 @@ export default function AdminPanelPage() {
   const [selectedCeremonyMeta, setSelectedCeremonyMeta] = useState<{ estado: string; conteo_final_invitados: number } | null>(null);
   const [perCeremonyEgrAttendance, setPerCeremonyEgrAttendance] = useState<Record<string, number>>({});
   const [perCeremonyInvAttendance, setPerCeremonyInvAttendance] = useState<Record<string, number>>({});
+  const pathname = usePathname();
 
   const ceremonyOptions = resumenes.map(r => ({ id: r.ceremonia_id, nombre: r.ceremonia_nombre }));
 
@@ -385,7 +388,7 @@ export default function AdminPanelPage() {
       <PanelSidebar />
 
       {/* ── Main Content Area ── */}
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto p-8 pb-20 md:pb-8 animate-fadeUp">
         {/* ── Executive Dashboard ── */}
         <section className="mb-12">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -675,35 +678,29 @@ export default function AdminPanelPage() {
       </div>
 
       {/* ── Mobile Bottom Nav ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-surface dark:bg-slate-900 border-t border-outline-variant dark:border-slate-700 px-2 py-3 shadow-md rounded-t-xl">
-        <a
-          href="#"
-          className="flex flex-col items-center justify-center text-primary font-bold bg-primary-fixed dark:bg-primary/30 rounded-full px-4 py-1 transition-all"
-        >
-          <LayoutDashboard size={22} />
-          <span className="font-label-sm text-label-sm mt-1">Home</span>
-        </a>
-        <a
-          href="#"
-          className="flex flex-col items-center justify-center text-secondary dark:text-slate-300 transition-all px-4 py-1 rounded-full"
-        >
-          <GraduationCap size={22} />
-          <span className="font-label-sm text-label-sm mt-1">Guests</span>
-        </a>
-        <a
-          href="#"
-          className="flex flex-col items-center justify-center text-secondary dark:text-slate-300 transition-all px-4 py-1 rounded-full"
-        >
-          <Calendar size={22} />
-          <span className="font-label-sm text-label-sm mt-1">Invitation</span>
-        </a>
-        <a
-          href="#"
-          className="flex flex-col items-center justify-center text-secondary dark:text-slate-300 transition-all px-4 py-1 rounded-full"
-        >
-          <Settings size={22} />
-          <span className="font-label-sm text-label-sm mt-1">Profile</span>
-        </a>
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-2 py-2 shadow-md">
+        {[
+          { href: "/panel/admin", icon: LayoutDashboard, label: "Dashboard" },
+          { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
+          { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
+          { href: "/panel/settings", icon: Settings, label: "Config" },
+        ].map(({ href, icon: Icon, label }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+                isActive
+                  ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
+                  : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+              }`}
+            >
+              <Icon size={22} />
+              <span className="text-[10px] font-medium">{label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* ── Toast Notification ── */}
