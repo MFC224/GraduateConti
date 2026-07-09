@@ -196,7 +196,7 @@ export default function CeremoniasPage() {
       const { error } = await (s.from("ceremonias") as any).delete().eq("id", id);
       if (error) { setToast({ type: "error", message: error.message }); return; }
       setCeremonias((prev) => prev.filter((c) => c.id !== id));
-      setToast({ type: "success", message: "Ceremonia eliminada." });
+      setToast({ type: "success", message: "Ceremonia eliminada permanentemente" });
     } catch {
       setToast({ type: "error", message: "Error de red." });
     }
@@ -282,13 +282,15 @@ export default function CeremoniasPage() {
                           >
                             <Pencil size={15} />
                           </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.nombre); }}
-                            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
-                            title="Eliminar ceremonia"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          {c.estado === "finalizada" && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.nombre); }}
+                              className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                              title="Eliminar ceremonia"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
                         </>
                       )}
                       <span className={`px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap ${statusColors[c.estado] ?? statusColors.planificada}`}>

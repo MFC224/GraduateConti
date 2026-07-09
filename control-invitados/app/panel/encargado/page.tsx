@@ -20,7 +20,6 @@ import {
   ClipboardList,
   Undo2,
   Shield,
-  Plus,
   Loader2,
 } from "lucide-react";
 import {
@@ -64,22 +63,6 @@ export default function EncargadoPanelPage() {
   const [consolidatedLoading, setConsolidatedLoading] = useState(false);
   const [openMenuEgresado, setOpenMenuEgresado] = useState<string | null>(null);
   const [chartData, setChartData] = useState<{ nombre: string; Egresados: number; Invitados: number }[]>([]);
-  const [showAddExtratemporal, setShowAddExtratemporal] = useState(false);
-  const [extratemporalSaving, setExtratemporalSaving] = useState(false);
-  const [extratemporalToast, setExtratemporalToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [siguienteOrden, setSiguienteOrden] = useState(1);
-  const [extratemporalForm, setExtratemporalForm] = useState({
-    dni: "",
-    nombres: "",
-    apellidos: "",
-    carrera: "",
-    numero_orden: 1,
-  });
-  const carreras = [
-    "Ingeniería Civil", "Ingeniería de Sistemas", "Ingeniería Industrial",
-    "Ingeniería Electrónica", "Ingeniería Mecánica", "Administración",
-    "Contabilidad", "Derecho", "Psicología", "Arquitectura",
-  ];
 
   /* ───── Auth ───── */
   useEffect(() => {
@@ -219,57 +202,6 @@ export default function EncargadoPanelPage() {
       if (data) setEgresados(data as EgresadoRow[]);
     })();
   }, [ceremoniaActiva]);
-
-  /* ───── Extratemporal: compute next order ───── */
-  useEffect(() => {
-    if (showAddExtratemporal && egresados.length > 0) {
-      const max = Math.max(...egresados.map((e) => e.numero_orden ?? 0));
-      setSiguienteOrden(max + 1);
-      setExtratemporalForm((prev) => ({ ...prev, numero_orden: max + 1 }));
-    } else if (showAddExtratemporal) {
-      setSiguienteOrden(1);
-      setExtratemporalForm((prev) => ({ ...prev, numero_orden: 1 }));
-    }
-  }, [showAddExtratemporal, egresados]);
-
-  async function handleAddExtratemporal() {
-    const f = extratemporalForm;
-    if (!f.dni || !f.nombres || !f.apellidos || !f.carrera) {
-      setExtratemporalToast({ type: "error", message: "Completa todos los campos obligatorios." });
-      return;
-    }
-    if (f.dni.length !== 8 || !/^\d{8}$/.test(f.dni)) {
-      setExtratemporalToast({ type: "error", message: "DNI debe tener 8 dígitos numéricos." });
-      return;
-    }
-    setExtratemporalSaving(true);
-    try {
-      const s = createClient();
-      const { error } = await (s.from("egresados") as any).insert([{
-        dni: f.dni,
-        nombres: f.nombres,
-        apellidos: f.apellidos,
-        programa_academico: f.carrera,
-        numero_orden: f.numero_orden,
-        ceremonia_id: ceremoniaActiva,
-        es_extratemporal: true,
-      }]);
-      if (error) { setExtratemporalToast({ type: "error", message: error.message }); return; }
-      setShowAddExtratemporal(false);
-      setExtratemporalForm({ dni: "", nombres: "", apellidos: "", carrera: "", numero_orden: siguienteOrden + 1 });
-      setExtratemporalToast({ type: "success", message: "Egresado extratemporal registrado correctamente." });
-      const { data } = await (s.from("egresados") as any)
-        .select("id, dni, nombres, apellidos, programa_academico, numero_orden")
-        .eq("ceremonia_id", ceremoniaActiva)
-        .order("numero_orden", { ascending: true });
-      if (data) setEgresados(data as EgresadoRow[]);
-    } catch { setExtratemporalToast({ type: "error", message: "Error de red." }); }
-    finally { setExtratemporalSaving(false); }
-  }
-
-  useEffect(() => {
-    if (extratemporalToast) { const t = setTimeout(() => setExtratemporalToast(null), 3500); return () => clearTimeout(t); }
-  }, [extratemporalToast]);
 
   /* ───── Generar Reporte ───── */
   async function generarReporte() {
@@ -590,15 +522,6 @@ export default function EncargadoPanelPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                {ceremoniaActiva && (
-                  <button
-                    onClick={() => setShowAddExtratemporal(true)}
-                    className="flex items-center gap-2 bg-primary text-on-primary rounded-full px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-all shadow-[0_4px_16px_rgb(0,0,0,0.08)] cursor-pointer"
-                  >
-                    <Plus size={16} />
-                    Agregar Egresado Extratemporal
-                  </button>
-                )}
               </div>
             </div>
 
@@ -691,86 +614,6 @@ export default function EncargadoPanelPage() {
             </div>
           </div>
           </div>
-
-        {/* ── Extratemporal Modal ── */}
-        {showAddExtratemporal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowAddExtratemporal(false)}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full maxw-md mx-4 p-6 animate-fadeUp" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Registro Extratemporal</h3>
-                <button onClick={() => setShowAddExtratemporal(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">DNI *</label>
-                  <input type="text" inputMode="numeric" maxLength={8} value={extratemporalForm.dni}
-                    onChange={(e) => setExtratemporalForm({ ...extratemporalForm, dni: e.target.value.replace(/\D/g, "") })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                    placeholder="12345678" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nombres *</label>
-                    <input type="text" value={extratemporalForm.nombres}
-                      onChange={(e) => setExtratemporalForm({ ...extratemporalForm, nombres: e.target.value })}
-                      className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                      placeholder="Nombres" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Apellidos *</label>
-                    <input type="text" value={extratemporalForm.apellidos}
-                      onChange={(e) => setExtratemporalForm({ ...extratemporalForm, apellidos: e.target.value })}
-                      className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                      placeholder="Apellidos" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Carrera *</label>
-                  <select value={extratemporalForm.carrera}
-                    onChange={(e) => setExtratemporalForm({ ...extratemporalForm, carrera: e.target.value })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
-                  >
-                    <option value="">Seleccionar carrera</option>
-                    {carreras.map((c) => (<option key={c} value={c}>{c}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">N° de Orden</label>
-                  <input type="number" min={1} value={extratemporalForm.numero_orden}
-                    onChange={(e) => setExtratemporalForm({ ...extratemporalForm, numero_orden: parseInt(e.target.value) || 1 })}
-                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow" />
-                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Sugerido: {siguienteOrden}</p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => setShowAddExtratemporal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-all cursor-pointer">
-                  Cancelar
-                </button>
-                <button onClick={handleAddExtratemporal} disabled={extratemporalSaving}
-                  className="px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer">
-                  {extratemporalSaving ? "Guardando..." : "Registrar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Toast ── */}
-        {extratemporalToast && (
-          <div className="fixed top-4 right-4 z-[100] animate-fadeUp">
-            <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg border ${
-              extratemporalToast.type === "success"
-                ? "bg-[#E8F5E9] border-[#A5D6A7] text-[#2E7D32] dark:bg-green-900/50 dark:border-green-700 dark:text-green-300"
-                : "bg-error-container border-error text-on-error-container dark:bg-red-900/50 dark:border-red-700 dark:text-red-300"
-            }`}>
-              <span className="font-body-md text-body-md">{extratemporalToast.message}</span>
-              <button onClick={() => setExtratemporalToast(null)} className="ml-2 opacity-60 hover:opacity-100 transition-opacity">&times;</button>
-            </div>
-          </div>
-        )}
 
       </main>
     </div>
