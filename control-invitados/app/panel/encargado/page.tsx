@@ -59,10 +59,10 @@ export default function EncargadoPanelPage() {
   const [egresados, setEgresados] = useState<EgresadoRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sedeId, setSedeId] = useState<string | null>(null);
-  const [consolidatedKPIs, setConsolidatedKPIs] = useState({ totalEgresados: 0, invitadosIngresados: 0, aforoLibre: 0, togasPorDevolver: 0, dnisRetenidos: 0 });
+  const [consolidatedKPIs, setConsolidatedKPIs] = useState({ totalEgresados: 0, invitadosIngresados: 0, egresadosIngresados: 0, aforoLibre: 0, togasPorDevolver: 0, dnisRetenidos: 0 });
   const [consolidatedLoading, setConsolidatedLoading] = useState(false);
   const [openMenuEgresado, setOpenMenuEgresado] = useState<string | null>(null);
-  const [chartData, setChartData] = useState<{ nombre: string; Esperados: number; Real: number }[]>([]);
+  const [chartData, setChartData] = useState<{ nombre: string; Egresados: number; Invitados: number }[]>([]);
 
   /* ───── Auth ───── */
   useEffect(() => {
@@ -139,7 +139,7 @@ export default function EncargadoPanelPage() {
           .in("ceremonia_id", ids)
           .eq("dni_retenido", true);
 
-        setConsolidatedKPIs({ totalEgresados: totals.totalEgresados, invitadosIngresados: consolidatedInvitados ?? 0, aforoLibre: consolidatedAforoLibre, togasPorDevolver: togas ?? 0, dnisRetenidos: dnis ?? 0 });
+        setConsolidatedKPIs({ totalEgresados: totals.totalEgresados, invitadosIngresados: consolidatedInvitados ?? 0, egresadosIngresados: consolidatedEgresados ?? 0, aforoLibre: consolidatedAforoLibre, togasPorDevolver: togas ?? 0, dnisRetenidos: dnis ?? 0 });
       } catch {} finally { setConsolidatedLoading(false); }
     })();
   }, [sedeId]);
@@ -166,8 +166,8 @@ export default function EncargadoPanelPage() {
 
       const data = (resumen ?? []).map((r: any) => ({
         nombre: r.ceremonia_nombre.length > 18 ? r.ceremonia_nombre.slice(0, 16) + "\u2026" : r.ceremonia_nombre,
-        Esperados: r.total_egresados + r.invitados_aprobados,
-        Real: (attMap[r.ceremonia_id] ?? 0) + r.invitados_ingresados,
+        Egresados: attMap[r.ceremonia_id] ?? 0,
+        Invitados: r.invitados_ingresados,
       }));
       setChartData(data);
     })();
@@ -250,6 +250,7 @@ export default function EncargadoPanelPage() {
   const [kpiMetrics, setKpiMetrics] = useState({
     totalEgresados: 0,
     invitadosIngresados: 0,
+    egresadosIngresados: 0,
     aforoLibre: 0,
     togasPorDevolver: 0,
     dnisRetenidos: 0,
@@ -301,6 +302,7 @@ export default function EncargadoPanelPage() {
         setKpiMetrics({
           totalEgresados: resumen?.total_egresados ?? 0,
           invitadosIngresados,
+          egresadosIngresados: egrIngresados ?? 0,
           aforoLibre: Math.max(0, aforoTotal - invitadosIngresados - (egrIngresados ?? 0)),
           togasPorDevolver: togas ?? 0,
           dnisRetenidos: dnis ?? 0,
@@ -423,21 +425,20 @@ export default function EncargadoPanelPage() {
 
         {/* Content */}
         <div className="px-4 md:px-xl pb-xl flex flex-col gap-xl animate-fadeUp">
-          {/* KPIs — 5 compact metricas */}
+          {/* KPIs — 4 metricas principales */}
           {metricsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-              {Array.from({ length: 5 }).map((_, i) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 h-20 animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               {[
                 { label: "Total Egresados", value: displayMetrics.totalEgresados, icon: Users },
                 { label: "Invitados Ingresados", value: displayMetrics.invitadosIngresados, icon: CalendarCheck },
-                { label: "Aforo Libre", value: showConsolidated ? null : displayMetrics.aforoLibre, icon: ClipboardList },
-                { label: "Togas por Devolver", value: displayMetrics.togasPorDevolver, icon: Undo2 },
-                { label: "DNIs Retenidos", value: displayMetrics.dnisRetenidos, icon: Shield },
+                { label: "Egresados Ingresados", value: displayMetrics.egresadosIngresados, icon: GraduationCap },
+                { label: "Ceremonias Activas", value: ceremonias.length, icon: Calendar },
               ].map((c) => (
                 <div key={c.label} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col items-start justify-center gap-1">
                   <div className="flex items-center justify-between w-full">
@@ -446,23 +447,19 @@ export default function EncargadoPanelPage() {
                     </span>
                     <c.icon size={16} className="text-indigo-500 shrink-0" />
                   </div>
-                  {c.value === null ? (
-                    <span className="text-base md:text-lg font-bold text-slate-400 dark:text-slate-500">Por evento</span>
-                  ) : (
-                    <span className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100">{c.value.toLocaleString()}</span>
-                  )}
+                  <span className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100">{c.value.toLocaleString()}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Asistencia General por Ceremonia */}
+          {/* Asistencia por Ceremonia */}
           <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              Asistencia General por Ceremonia
+              Asistencia por Ceremonia
             </h3>
             <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
-              Esperados vs Asistencia Real
+              Egresados e Invitados que ingresaron
             </p>
             {chartData.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
@@ -489,8 +486,8 @@ export default function EncargadoPanelPage() {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: "12px" }} />
-                  <Bar dataKey="Esperados" fill="#461599" name="Total Esperados" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Real" fill="#22c55e" name="Asistencia Real" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Egresados" fill="#22c55e" name="Egresados" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Invitados" fill="#2563eb" name="Invitados" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

@@ -2,6 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 
+function getRoleBasePath(rol: string | null): string | null {
+  if (rol === "admin_general") return "/panel/admin";
+  if (rol === "encargado") return "/panel/encargado";
+  if (rol === "operario") return "/panel/operario";
+  return null;
+}
+
+function matchesBase(path: string, base: string) {
+  return path === base || path.startsWith(base + "/");
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -28,11 +39,42 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users trying to access /panel/*
   if (!user && request.nextUrl.pathname.startsWith("/panel")) {
     const url = request.nextUrl.clone();
     url.pathname = "/staff/ingreso";
     return NextResponse.redirect(url);
+  }
+
+  if (user) {
+    const { data: usuario } = await (supabase.from("usuarios") as any)
+      .select("rol")
+      .eq("id", user.id)
+      .single();
+
+    const path = request.nextUrl.pathname;
+    const expectedBase = getRoleBasePath(usuario?.rol ?? null);
+
+    if (!expectedBase) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/staff/ingreso";
+      return NextResponse.redirect(url);
+    }
+
+    const roleRoutes: Record<string, string[]> = {
+      admin_general: ["/panel/encargado", "/panel/operario"],
+      encargado: ["/panel/admin", "/panel/operario"],
+      operario: ["/panel/admin", "/panel/encargado"],
+    };
+
+    const forbiddenRoutes = roleRoutes[usuario?.rol ?? ""] ?? [];
+
+    for (const forbidden of forbiddenRoutes) {
+      if (matchesBase(path, forbidden)) {
+        const url = request.nextUrl.clone();
+        url.pathname = expectedBase;
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return supabaseResponse;

@@ -85,17 +85,19 @@ export default function PanelSidebar() {
       </div>
 
       <div className="flex-1 flex flex-col gap-xs">
-        <Link
-          href={dashboardHref}
-          className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
-            pathname === dashboardHref
-              ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
-              : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
-          }`}
-        >
-          <LayoutDashboard size={20} />
-          <span>Dashboard</span>
-        </Link>
+        {userRol && (
+          <Link
+            href={dashboardHref}
+            className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+              pathname === dashboardHref
+                ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+                : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+            }`}
+          >
+            <LayoutDashboard size={20} />
+            <span>Dashboard</span>
+          </Link>
+        )}
         {navItems.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;
           return (

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Plus,
   Pencil,
+  Trash2,
   Calendar,
   Clock,
   Users,
@@ -188,6 +189,19 @@ export default function CeremoniasPage() {
     }
   }
 
+  async function handleDelete(id: string, nombre: string) {
+    if (!window.confirm(`¿Estás seguro de eliminar "${nombre}"? Esto es irreversible.`)) return;
+    try {
+      const s = createClient();
+      const { error } = await (s.from("ceremonias") as any).delete().eq("id", id);
+      if (error) { setToast({ type: "error", message: error.message }); return; }
+      setCeremonias((prev) => prev.filter((c) => c.id !== id));
+      setToast({ type: "success", message: "Ceremonia eliminada." });
+    } catch {
+      setToast({ type: "error", message: "Error de red." });
+    }
+  }
+
   function formatDate(dateStr: string) {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric" });
@@ -260,13 +274,22 @@ export default function CeremoniasPage() {
                     </h3>
                     <div className="flex items-center gap-2 shrink-0">
                       {isAdmin && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); openEdit(c); }}
-                          className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-primary transition-all"
-                          title="Editar ceremonia"
-                        >
-                          <Pencil size={15} />
-                        </button>
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openEdit(c); }}
+                            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-primary transition-all"
+                            title="Editar ceremonia"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.nombre); }}
+                            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                            title="Eliminar ceremonia"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </>
                       )}
                       <span className={`px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap ${statusColors[c.estado] ?? statusColors.planificada}`}>
                         {statusLabels[c.estado] ?? c.estado}
