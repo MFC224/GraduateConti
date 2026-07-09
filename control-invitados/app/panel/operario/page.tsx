@@ -1076,7 +1076,7 @@ export default function OperarioPanelPage() {
                     onChange={(e) => setObservacionesNota(e.target.value)}
                     placeholder="Ej: Dejó pasaporte en vez de DNI, no trajo invitados, etc."
                     rows={3}
-                    className="w-full resize-none rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-surface-container-lowest text-sm text-gray-900 dark:text-white p-3 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500 transition-all"
+                    className="w-full resize-none rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white p-3 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500 transition-all"
                   />
                   <button
                     onClick={handleSaveObservaciones}

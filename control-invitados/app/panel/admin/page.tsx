@@ -11,6 +11,7 @@ import {
   ClipboardList,
   ChevronDown,
   UserPlus,
+  Plus,
   Shield,
   Undo2,
 } from "lucide-react";
@@ -78,6 +79,17 @@ export default function AdminPanelPage() {
   const [directInvitadosLoading, setDirectInvitadosLoading] = useState(false);
   const [selectedCeremonyMeta, setSelectedCeremonyMeta] = useState<{ estado: string; conteo_final_invitados: number } | null>(null);
   const [perCeremonyEgrAttendance, setPerCeremonyEgrAttendance] = useState<Record<string, number>>({});
+  const [showAddExtratemporal, setShowAddExtratemporal] = useState(false);
+  const [extratemporalSaving, setExtratemporalSaving] = useState(false);
+  const [extratemporalForm, setExtratemporalForm] = useState({
+    dni: "", nombres: "", apellidos: "", carrera: "", numero_orden: 1,
+  });
+  const [siguienteOrden, setSiguienteOrden] = useState(1);
+  const carrerasAdmin = [
+    "Ingeniería Civil", "Ingeniería de Sistemas", "Ingeniería Industrial",
+    "Ingeniería Electrónica", "Ingeniería Mecánica", "Administración",
+    "Contabilidad", "Derecho", "Psicología", "Arquitectura",
+  ];
 
   const ceremonyOptions = resumenes.map(r => ({ id: r.ceremonia_id, nombre: r.ceremonia_nombre }));
 
@@ -338,6 +350,39 @@ export default function AdminPanelPage() {
     } catch {}
   }
 
+  /* ───── Extratemporal ───── */
+  async function handleAddExtratemporalAdmin() {
+    const f = extratemporalForm;
+    if (!f.dni || !f.nombres || !f.apellidos || !f.carrera) {
+      setToast({ type: "error", message: "Completa todos los campos obligatorios." });
+      return;
+    }
+    if (f.dni.length !== 8 || !/^\d{8}$/.test(f.dni)) {
+      setToast({ type: "error", message: "DNI debe tener 8 dígitos numéricos." });
+      return;
+    }
+    if (!selectedCeremoniaId) {
+      setToast({ type: "error", message: "Selecciona una ceremonia primero." });
+      return;
+    }
+    setExtratemporalSaving(true);
+    try {
+      const s = createClient();
+      const { error } = await (s.from("egresados") as any).insert([{
+        dni: f.dni, nombres: f.nombres, apellidos: f.apellidos,
+        programa_academico: f.carrera, numero_orden: f.numero_orden,
+        ceremonia_id: selectedCeremoniaId, es_extratemporal: true,
+      }]);
+      if (error) { setToast({ type: "error", message: error.message }); return; }
+      setShowAddExtratemporal(false);
+      setExtratemporalForm({ dni: "", nombres: "", apellidos: "", carrera: "", numero_orden: siguienteOrden + 1 });
+      setToast({ type: "success", message: "Egresado extratemporal registrado correctamente." });
+      const s2 = createClient();
+      await cargarDatos(s2, sedeSeleccionada);
+    } catch { setToast({ type: "error", message: "Error de red." }); }
+    finally { setExtratemporalSaving(false); }
+  }
+
   const filteredResumenes = selectedCeremoniaId 
     ? resumenes.filter(r => r.ceremonia_id === selectedCeremoniaId) 
     : resumenes;
@@ -555,6 +600,103 @@ export default function AdminPanelPage() {
             </>
           )}
         </section>
+
+        {/* ── Extratemporal Section ── */}
+        <section className="mb-12">
+          <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Registro Extratemporal</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                  Agrega egresados de último minuto a la ceremonia seleccionada.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const max = resumenes.filter(r => r.ceremonia_id === selectedCeremoniaId).reduce((max, r) => Math.max(max, r.total_egresados), 0);
+                  setSiguienteOrden(max + 1);
+                  setExtratemporalForm((prev) => ({ ...prev, numero_orden: max + 1 }));
+                  setShowAddExtratemporal(true);
+                }}
+                disabled={!selectedCeremoniaId}
+                className="flex items-center gap-2 bg-primary text-on-primary rounded-full px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_16px_rgb(0,0,0,0.08)] cursor-pointer"
+              >
+                <Plus size={16} />
+                Agregar Egresado Extratemporal
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Extratemporal Modal ── */}
+        {showAddExtratemporal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowAddExtratemporal(false)}>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Registro Extratemporal</h3>
+                <button onClick={() => setShowAddExtratemporal(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Ceremonia</label>
+                  <p className="text-sm text-gray-900 dark:text-white font-medium px-1">{ceremonyOptions.find(c => c.id === selectedCeremoniaId)?.nombre ?? "—"}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">DNI *</label>
+                  <input type="text" inputMode="numeric" maxLength={8} value={extratemporalForm.dni}
+                    onChange={(e) => setExtratemporalForm({ ...extratemporalForm, dni: e.target.value.replace(/\D/g, "") })}
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                    placeholder="12345678" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nombres *</label>
+                    <input type="text" value={extratemporalForm.nombres}
+                      onChange={(e) => setExtratemporalForm({ ...extratemporalForm, nombres: e.target.value })}
+                      className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                      placeholder="Nombres" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Apellidos *</label>
+                    <input type="text" value={extratemporalForm.apellidos}
+                      onChange={(e) => setExtratemporalForm({ ...extratemporalForm, apellidos: e.target.value })}
+                      className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                      placeholder="Apellidos" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Carrera *</label>
+                  <select value={extratemporalForm.carrera}
+                    onChange={(e) => setExtratemporalForm({ ...extratemporalForm, carrera: e.target.value })}
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  >
+                    <option value="">Seleccionar carrera</option>
+                    {carrerasAdmin.map((c) => (<option key={c} value={c}>{c}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">N° de Orden</label>
+                  <input type="number" min={1} value={extratemporalForm.numero_orden}
+                    onChange={(e) => setExtratemporalForm({ ...extratemporalForm, numero_orden: parseInt(e.target.value) || 1 })}
+                    className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow" />
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Sugerido: {siguienteOrden}</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button onClick={() => setShowAddExtratemporal(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-all cursor-pointer">
+                  Cancelar
+                </button>
+                <button onClick={handleAddExtratemporalAdmin} disabled={extratemporalSaving}
+                  className="px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer">
+                  {extratemporalSaving ? "Guardando..." : "Registrar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── User Management Section ── */}
         <section>
