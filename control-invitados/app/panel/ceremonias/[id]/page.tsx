@@ -709,7 +709,7 @@ export default function CeremoniaDetallePage() {
           )}
         </div>
 
-        {/* Bloque C: Registro Extratemporal */}
+        {isAdmin && (
         <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -732,6 +732,7 @@ export default function CeremoniaDetallePage() {
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* Modal: Añadir Autoridad */}
@@ -850,7 +851,7 @@ export default function CeremoniaDetallePage() {
       )}
 
       {/* ── Extratemporal Modal ── */}
-      {showExtratemporal && (
+      {isAdmin && showExtratemporal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowExtratemporal(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
