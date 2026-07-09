@@ -14,6 +14,16 @@ import {
   Shield,
   Undo2,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import PanelSidebar from "@/components/PanelSidebar";
 import { crearUsuario, toggleUserStatus } from "@/app/actions/usuarios";
@@ -66,6 +76,7 @@ export default function AdminPanelPage() {
   const [directInvitadosIngresados, setDirectInvitadosIngresados] = useState(0);
   const [directInvitadosLoading, setDirectInvitadosLoading] = useState(false);
   const [selectedCeremonyMeta, setSelectedCeremonyMeta] = useState<{ estado: string; conteo_final_invitados: number } | null>(null);
+  const [perCeremonyEgrAttendance, setPerCeremonyEgrAttendance] = useState<Record<string, number>>({});
 
   const ceremonyOptions = resumenes.map(r => ({ id: r.ceremonia_id, nombre: r.ceremonia_nombre }));
 
@@ -282,6 +293,17 @@ export default function AdminPanelPage() {
       });
       setResumenes(resumenesConSede);
 
+      const { data: egrData } = await (s.from("egresados") as any)
+        .select("ceremonia_id, ingreso_evento")
+        .in("ceremonia_id", ceremonyIds);
+      const attMap: Record<string, number> = {};
+      (egrData ?? []).forEach((e: any) => {
+        if (e.ingreso_evento) {
+          attMap[e.ceremonia_id] = (attMap[e.ceremonia_id] || 0) + 1;
+        }
+      });
+      setPerCeremonyEgrAttendance(attMap);
+
       const proximas = ceremonies.slice(0, 10)
         .map((c: any) => ({
           id: c.id,
@@ -327,21 +349,11 @@ export default function AdminPanelPage() {
   const displayTogas = selectedCeremoniaId ? perCeremonyTogas : totalTogasPorDevolver;
   const displayDnis = selectedCeremoniaId ? perCeremonyDnis : totalDnisEnCustodia;
 
-  const barChartData = (() => {
-    const porSede = new Map<string, { aforo: number; ingresados: number }>();
-    resumenes.forEach((r) => {
-      const prev = porSede.get(r.sede_nombre) ?? { aforo: 0, ingresados: 0 };
-      prev.aforo += r.aforo_total_invitados;
-      prev.ingresados += r.invitados_ingresados;
-      porSede.set(r.sede_nombre, prev);
-    });
-    return Array.from(porSede.entries()).map(([sede, d]) => ({
-      sede,
-      aforo: d.aforo,
-      ingresados: d.ingresados,
-      pct: d.aforo ? Math.round((d.ingresados / d.aforo) * 100) : 0,
-    }));
-  })();
+  const chartData = resumenes.map((r) => ({
+    nombre: r.ceremonia_nombre.length > 18 ? r.ceremonia_nombre.slice(0, 16) + "\u2026" : r.ceremonia_nombre,
+    Esperados: r.total_egresados + r.invitados_aprobados,
+    Real: (perCeremonyEgrAttendance[r.ceremonia_id] ?? 0) + r.invitados_ingresados,
+  }));
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
@@ -442,47 +454,44 @@ export default function AdminPanelPage() {
 
               {/* Chart + Events */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Capacity vs Registrations */}
+                {/* Asistencia General por Ceremonia */}
                 <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    Capacidad vs Ingresos
+                    Asistencia General por Ceremonia
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
-                    Ocupación actual por sede.
+                    Esperados vs Asistencia Real
                   </p>
-                  <div className="flex-1 flex flex-col justify-center gap-4">
-                    {barChartData.length === 0 ? (
+                  <div className="flex-1">
+                    {chartData.length === 0 ? (
                       <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
                         No hay datos disponibles.
                       </p>
                     ) : (
-                      barChartData.map((item) => {
-                        const barColor =
-                          item.pct >= 90
-                            ? "bg-error"
-                            : item.pct >= 70
-                              ? "bg-primary"
-                              : item.pct >= 40
-                                ? "bg-primary-fixed-dim"
-                                : "bg-outline";
-                        return (
-                          <div key={item.sede}>
-                            <div className="flex justify-between text-sm mb-1 text-gray-900 dark:text-slate-300">
-                              <span>{item.sede || "Sin sede"}</span>
-                              <span>
-                                {item.pct}% ({item.ingresados.toLocaleString()} /{" "}
-                                {item.aforo.toLocaleString()})
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-4">
-                              <div
-                                className={`${barColor} h-4 rounded-full transition-all`}
-                                style={{ width: `${Math.max(item.pct, 2)}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis
+                            dataKey="nombre"
+                            tick={{ fontSize: 11 }}
+                            angle={-20}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip
+                            contentStyle={{
+                              background: "#fff",
+                              border: "1px solid #e5e7eb",
+                              borderRadius: "8px",
+                              fontSize: "13px",
+                            }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: "12px" }} />
+                          <Bar dataKey="Esperados" fill="#461599" name="Total Esperados" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="Real" fill="#22c55e" name="Asistencia Real" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
                     )}
                   </div>
                 </div>

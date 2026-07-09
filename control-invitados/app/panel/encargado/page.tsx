@@ -22,6 +22,16 @@ import {
   Shield,
   Loader2,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import Header from "@/components/Header";
 
@@ -52,6 +62,7 @@ export default function EncargadoPanelPage() {
   const [consolidatedKPIs, setConsolidatedKPIs] = useState({ totalEgresados: 0, invitadosIngresados: 0, aforoLibre: 0, togasPorDevolver: 0, dnisRetenidos: 0 });
   const [consolidatedLoading, setConsolidatedLoading] = useState(false);
   const [openMenuEgresado, setOpenMenuEgresado] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<{ nombre: string; Esperados: number; Real: number }[]>([]);
 
   /* ───── Auth ───── */
   useEffect(() => {
@@ -132,6 +143,35 @@ export default function EncargadoPanelPage() {
       } catch {} finally { setConsolidatedLoading(false); }
     })();
   }, [sedeId]);
+
+  /* ───── Chart data ───── */
+  useEffect(() => {
+    if (ceremonias.length === 0) return;
+    (async () => {
+      const s = createClient();
+      const cerIds = ceremonias.map((c) => c.id);
+
+      const { data: resumen } = await (s.from("v_resumen_ceremonia") as any)
+        .select("*")
+        .in("ceremonia_id", cerIds);
+
+      const { data: egrData } = await (s.from("egresados") as any)
+        .select("ceremonia_id, ingreso_evento")
+        .in("ceremonia_id", cerIds);
+
+      const attMap: Record<string, number> = {};
+      (egrData ?? []).forEach((e: any) => {
+        if (e.ingreso_evento) attMap[e.ceremonia_id] = (attMap[e.ceremonia_id] || 0) + 1;
+      });
+
+      const data = (resumen ?? []).map((r: any) => ({
+        nombre: r.ceremonia_nombre.length > 18 ? r.ceremonia_nombre.slice(0, 16) + "\u2026" : r.ceremonia_nombre,
+        Esperados: r.total_egresados + r.invitados_aprobados,
+        Real: (attMap[r.ceremonia_id] ?? 0) + r.invitados_ingresados,
+      }));
+      setChartData(data);
+    })();
+  }, [ceremonias]);
 
   /* ───── Cerrar menú al hacer clic fuera ───── */
   useEffect(() => {
@@ -415,6 +455,46 @@ export default function EncargadoPanelPage() {
               ))}
             </div>
           )}
+
+          {/* Asistencia General por Ceremonia */}
+          <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              Asistencia General por Ceremonia
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
+              Esperados vs Asistencia Real
+            </p>
+            {chartData.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
+                No hay datos disponibles.
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="nombre"
+                    tick={{ fontSize: 11 }}
+                    angle={-20}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "13px",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                  <Bar dataKey="Esperados" fill="#461599" name="Total Esperados" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Real" fill="#22c55e" name="Asistencia Real" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
 
           {/* Table */}
           <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
