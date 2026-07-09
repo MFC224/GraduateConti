@@ -18,6 +18,7 @@ import {
   Users,
   Scan,
   Calendar,
+  Pencil,
   ChevronDown,
   Table,
   FileText,
@@ -126,8 +127,14 @@ export default function OperarioPanelPage() {
 
   /* ───── DNI manual search (Tab Invitados) ───── */
   const [dniSearchTerm, setDniSearchTerm] = useState("");
-  const [dniSearchResult, setDniSearchResult] = useState<any>(null);
+  const [dniSearchResults, setDniSearchResults] = useState<any[]>([]);
   const [dniSearching, setDniSearching] = useState(false);
+
+  const [editInvId, setEditInvId] = useState<string | null>(null);
+  const [editDni, setEditDni] = useState("");
+  const [editNombres, setEditNombres] = useState("");
+  const [editApellidos, setEditApellidos] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const [fullEgresadosList, setFullEgresadosList] = useState<any[]>([]);
   const [fullInvitadosList, setFullInvitadosList] = useState<any[]>([]);
@@ -350,18 +357,22 @@ export default function OperarioPanelPage() {
     const term = dniSearchTerm.trim();
     if (!term || !selectedCeremoniaId) return;
     setDniSearching(true);
-    setDniSearchResult(null);
+    setDniSearchResults([]);
     try {
       const s = createClient();
-      const { data } = await (s.from("invitados") as any)
+      let query = (s.from("invitados") as any)
         .select("id, egresado_id, nombres, apellidos, dni, estado, ingreso_at, qr_token")
-        .eq("ceremonia_id", selectedCeremoniaId)
-        .eq("dni", term)
-        .maybeSingle();
-      if (!data) {
-        setAlert({ type: "info", message: "No se encontró invitado con ese DNI." });
+        .eq("ceremonia_id", selectedCeremoniaId);
+      if (/^\d{1,8}$/.test(term)) {
+        const { data } = await query.eq("dni", term).maybeSingle();
+        setDniSearchResults(data ? [data] : []);
+        if (!data) setAlert({ type: "info", message: "No se encontró invitado con ese DNI." });
       } else {
-        setDniSearchResult(data);
+        const { data } = await query
+          .or(`nombres.ilike.%${term}%,apellidos.ilike.%${term}%`)
+          .limit(20);
+        setDniSearchResults(data ?? []);
+        if (!data?.length) setAlert({ type: "info", message: "No se encontraron invitados con ese nombre." });
       }
     } catch {} finally {
       setDniSearching(false);
@@ -439,9 +450,9 @@ export default function OperarioPanelPage() {
             );
             setSelectedEgresado({ ...selectedEgresado, invitados: updated });
           }
-          if (dniSearchResult?.id === invId) {
-            setDniSearchResult({ ...dniSearchResult, ingreso_at: ingresoAt });
-          }
+          setDniSearchResults((prev) =>
+            prev.map((r) => (r.id === invId ? { ...r, ingreso_at: ingresoAt } : r))
+          );
           setFullInvitadosList(prev => prev.map(inv => inv.id === invId ? { ...inv, ingreso_at: ingresoAt } : inv));
           fetchAllCeremonyData();
           qrFeedback
@@ -471,9 +482,9 @@ export default function OperarioPanelPage() {
         );
         setSelectedEgresado({ ...selectedEgresado, invitados: updated });
       }
-      if (dniSearchResult?.id === invId) {
-        setDniSearchResult({ ...dniSearchResult, ingreso_at: ingresoAt });
-      }
+      setDniSearchResults((prev) =>
+        prev.map((r) => (r.id === invId ? { ...r, ingreso_at: ingresoAt } : r))
+      );
       setFullInvitadosList(prev => prev.map(inv => inv.id === invId ? { ...inv, ingreso_at: ingresoAt } : inv));
       if (qrFeedback) {
         const { count: totalIngresados } = await (s.from("invitados") as any)
@@ -631,6 +642,76 @@ export default function OperarioPanelPage() {
       setAlert({ type: "success", message: `Invitado de último minuto registrado con ingreso confirmado para ${selectedEgresado.nombres}.` });
       fetchAllCeremonyData();
     } catch { setAlert({ type: "error", message: "Error al registrar." }); setLmSubmitting(false); }
+  }
+
+  /* ───── Editar invitado ───── */
+  function openEditModal(inv: { id: string; dni: string; nombres: string; apellidos: string; ingreso_at: string | null }) {
+    setEditInvId(inv.id);
+    setEditDni(inv.dni);
+    setEditNombres(inv.nombres);
+    setEditApellidos(inv.apellidos);
+  }
+
+  async function handleSaveInvEdit() {
+    if (!editInvId) return;
+    setEditSaving(true);
+    try {
+      const s = createClient();
+      const { error } = await (s.from("invitados") as any)
+        .update({ dni: editDni, nombres: editNombres, apellidos: editApellidos })
+        .eq("id", editInvId);
+      if (error) { setAlert({ type: "error", message: "Error al guardar." }); setEditSaving(false); return; }
+
+      if (selectedEgresado) {
+        setSelectedEgresado({
+          ...selectedEgresado,
+          invitados: selectedEgresado.invitados.map((inv) =>
+            inv.id === editInvId ? { ...inv, dni: editDni, nombres: editNombres, apellidos: editApellidos } : inv
+          ),
+        });
+      }
+      setDniSearchResults((prev) =>
+        prev.map((r) =>
+          r.id === editInvId ? { ...r, dni: editDni, nombres: editNombres, apellidos: editApellidos } : r
+        )
+      );
+      setFullInvitadosList((prev) =>
+        prev.map((inv) =>
+          inv.id === editInvId ? { ...inv, dni: editDni, nombres: editNombres, apellidos: editApellidos } : inv
+        )
+      );
+      setEditInvId(null);
+      setAlert({ type: "success", message: "Invitado actualizado." });
+    } catch { setAlert({ type: "error", message: "Error de red." }); }
+    setEditSaving(false);
+  }
+
+  /* ───── Anular ingreso de invitado ───── */
+  async function handleAnularIngresoInvitado(invId: string) {
+    try {
+      const s = createClient();
+      await (s.from("invitados") as any)
+        .update({ ingreso_at: null, ingresado_por: null, metodo_ingreso: null })
+        .eq("id", invId);
+
+      if (selectedEgresado) {
+        setSelectedEgresado({
+          ...selectedEgresado,
+          invitados: selectedEgresado.invitados.map((inv) =>
+            inv.id === invId ? { ...inv, ingreso_at: null } : inv
+          ),
+        });
+      }
+      setDniSearchResults((prev) =>
+        prev.map((r) => (r.id === invId ? { ...r, ingreso_at: null } : r))
+      );
+      setFullInvitadosList((prev) =>
+        prev.map((inv) =>
+          inv.id === invId ? { ...inv, ingreso_at: null, ingresado_por: null, metodo_ingreso: null } : inv
+        )
+      );
+      setAlert({ type: "success", message: "Ingreso anulado — aforo libre recalculado." });
+    } catch { setAlert({ type: "error", message: "Error de red." }); }
   }
 
   /* ───── Tab styles ───── */
@@ -1037,23 +1118,39 @@ export default function OperarioPanelPage() {
                                 {inv.ingreso_at && ` — Ingresó: ${toPeruTime(inv.ingreso_at)}`}
                               </p>
                             </div>
-                            <button
-                              onClick={() => markInvEntry(inv.id, "manual")}
-                              disabled={updatingInv === inv.id || yaIngreso}
-                              className={`h-14 px-6 rounded-xl text-base font-bold flex items-center gap-2 transition-all flex-shrink-0 ${
-                                yaIngreso
-                                  ? "bg-green-500 text-white cursor-default"
-                                  : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-green-500 hover:text-white border-2 border-gray-200 dark:border-slate-600 hover:border-green-500"
-                              } ${updatingInv === inv.id ? "opacity-50" : ""}`}
-                            >
-                              {updatingInv === inv.id ? (
-                                <Loader2 size={22} className="animate-spin" />
-                              ) : yaIngreso ? (
-                                <><CheckCircle size={22} /> Ingresó</>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={() => openEditModal(inv)}
+                                className="w-10 h-10 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-400 dark:text-slate-400 hover:text-primary hover:border-primary flex items-center justify-center transition-all"
+                                title="Editar invitado"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              {yaIngreso ? (
+                                <button
+                                  onClick={() => handleAnularIngresoInvitado(inv.id)}
+                                  className="h-10 px-4 rounded-xl text-sm font-bold border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all flex items-center gap-2 whitespace-nowrap"
+                                >
+                                  <XCircle size={16} /> Anular Ingreso
+                                </button>
                               ) : (
-                                "Marcar Ingreso"
+                                <button
+                                  onClick={() => markInvEntry(inv.id, "manual")}
+                                  disabled={updatingInv === inv.id}
+                                  className={`h-10 px-4 rounded-xl text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+                                    updatingInv === inv.id
+                                      ? "bg-gray-100 dark:bg-slate-700 text-gray-400"
+                                      : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-green-500 hover:text-white border-2 border-gray-200 dark:border-slate-600 hover:border-green-500"
+                                  }`}
+                                >
+                                  {updatingInv === inv.id ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                  ) : (
+                                    <><CheckCircle size={16} /> Marcar Ingreso</>
+                                  )}
+                                </button>
                               )}
-                            </button>
+                            </div>
                           </div>
                         );
                       })}
@@ -1121,11 +1218,10 @@ export default function OperarioPanelPage() {
               <div className="flex-1 relative">
                 <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
                 <input
-                  aria-label="Buscar invitado por DNI"
+                  aria-label="Buscar invitado por DNI, Nombres o Apellidos"
                   className="w-full h-14 pl-12 pr-4 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-600 rounded-2xl text-lg text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none placeholder-gray-400 dark:placeholder-slate-500"
-                  placeholder="Buscar invitado por DNI..."
+                  placeholder="Buscar por DNI, Nombres o Apellidos..."
                   type="text"
-                  inputMode="numeric"
                   value={dniSearchTerm}
                   onChange={(e) => setDniSearchTerm(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") doDniSearch(); }}
@@ -1141,31 +1237,52 @@ export default function OperarioPanelPage() {
               </button>
             </div>
 
-            {/* DNI search result */}
-            {dniSearchResult && (
-              <div className="bg-white dark:bg-slate-900 border-2 border-gray-100 dark:border-slate-700 rounded-2xl p-5 flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{dniSearchResult.nombres} {dniSearchResult.apellidos}</p>
-                  <p className="text-sm text-gray-500 dark:text-slate-400">DNI: {dniSearchResult.dni}</p>
-                </div>
-                <button
-                  onClick={() => markInvEntry(dniSearchResult.id, "dni")}
-                  disabled={updatingInv === dniSearchResult.id || !!dniSearchResult.ingreso_at}
-                  className={`h-14 px-6 rounded-xl text-base font-bold flex items-center gap-2 transition-all flex-shrink-0 ${
-                    dniSearchResult.ingreso_at
-                      ? "bg-green-500 text-white cursor-default"
-                      : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-green-500 hover:text-white border-2 border-gray-200 dark:border-slate-600 hover:border-green-500"
-                  } ${updatingInv === dniSearchResult.id ? "opacity-50" : ""}`}
-                >
-                  {updatingInv === dniSearchResult.id ? (
-                    <Loader2 size={22} className="animate-spin" />
-                  ) : dniSearchResult.ingreso_at ? (
-                    <><CheckCircle size={22} /> Ingresó</>
-                  ) : (
-                    "Marcar Ingreso"
-                  )}
-                </button>
-              </div>
+            {/* DNI / name search results */}
+            {dniSearchResults.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <p className="text-sm text-gray-500 dark:text-slate-400 font-medium">{dniSearchResults.length} resultado(s)</p>
+                {dniSearchResults.map((r) => (
+                  <div key={r.id} className="bg-white dark:bg-slate-900 border-2 border-gray-100 dark:border-slate-700 rounded-2xl p-5 flex items-center justify-between">
+                    <div>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">{r.nombres} {r.apellidos}</p>
+                      <p className="text-sm text-gray-500 dark:text-slate-400">DNI: {r.dni}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => openEditModal(r)}
+                        className="w-10 h-10 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-400 dark:text-slate-400 hover:text-primary hover:border-primary flex items-center justify-center transition-all"
+                        title="Editar invitado"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      {r.ingreso_at ? (
+                        <button
+                          onClick={() => handleAnularIngresoInvitado(r.id)}
+                          className="h-10 px-4 rounded-xl text-sm font-bold border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <XCircle size={16} /> Anular Ingreso
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => markInvEntry(r.id, "dni")}
+                          disabled={updatingInv === r.id}
+                          className={`h-10 px-4 rounded-xl text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
+                            updatingInv === r.id
+                              ? "bg-gray-100 dark:bg-slate-700 text-gray-400"
+                              : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-green-500 hover:text-white border-2 border-gray-200 dark:border-slate-600 hover:border-green-500"
+                          }`}
+                        >
+                          {updatingInv === r.id ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <><CheckCircle size={16} /> Marcar Ingreso</>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </section>
             )}
           </>
         )}
@@ -1354,6 +1471,70 @@ export default function OperarioPanelPage() {
                 className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {lmSubmitting ? "Registrando..." : <><PlusCircle size={18} /> Registrar</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Editar Invitado ── */}
+      {editInvId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Editar Invitado
+              </h3>
+              <button onClick={() => setEditInvId(null)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">DNI</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={editDni}
+                  onChange={(e) => setEditDni(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  placeholder="DNI del invitado"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nombres</label>
+                <input
+                  type="text"
+                  value={editNombres}
+                  onChange={(e) => setEditNombres(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  placeholder="Nombres del invitado"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Apellidos</label>
+                <input
+                  type="text"
+                  value={editApellidos}
+                  onChange={(e) => setEditApellidos(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  placeholder="Apellidos del invitado"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-8">
+              <button
+                onClick={() => setEditInvId(null)}
+                className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveInvEdit}
+                disabled={editSaving}
+                className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {editSaving ? "Guardando..." : <><CheckCircle size={18} /> Guardar Cambios</>}
               </button>
             </div>
           </div>
