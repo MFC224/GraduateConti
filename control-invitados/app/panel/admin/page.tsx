@@ -14,6 +14,7 @@ import {
   Plus,
   Shield,
   Undo2,
+  Trash2,
 } from "lucide-react";
 import {
   BarChart,
@@ -79,6 +80,7 @@ export default function AdminPanelPage() {
   const [directInvitadosLoading, setDirectInvitadosLoading] = useState(false);
   const [selectedCeremonyMeta, setSelectedCeremonyMeta] = useState<{ estado: string; conteo_final_invitados: number } | null>(null);
   const [perCeremonyEgrAttendance, setPerCeremonyEgrAttendance] = useState<Record<string, number>>({});
+  const [perCeremonyInvAttendance, setPerCeremonyInvAttendance] = useState<Record<string, number>>({});
   const [showAddExtratemporal, setShowAddExtratemporal] = useState(false);
   const [extratemporalSaving, setExtratemporalSaving] = useState(false);
   const [extratemporalForm, setExtratemporalForm] = useState({
@@ -230,6 +232,17 @@ export default function AdminPanelPage() {
     }
   }
 
+  async function handleDeleteUser(userId: string, userName: string) {
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar a "${userName}" permanentemente?`)) return;
+    try {
+      const s = createClient();
+      const { error } = await (s.from("usuarios") as any).delete().eq("id", userId);
+      if (error) { setToast({ type: "error", message: error.message }); return; }
+      setUsuarios((prev) => prev.filter((u: any) => u.id !== userId));
+      setToast({ type: "success", message: "Usuario eliminado." });
+    } catch { setToast({ type: "error", message: "Error de red." }); }
+  }
+
   useEffect(() => {
     (async () => {
       try {
@@ -317,6 +330,16 @@ export default function AdminPanelPage() {
       });
       setPerCeremonyEgrAttendance(attMap);
 
+      const { data: invData } = await (s.from("invitados") as any)
+        .select("ceremonia_id")
+        .in("ceremonia_id", ceremonyIds)
+        .not("ingreso_at", "is", null);
+      const invAttMap: Record<string, number> = {};
+      (invData ?? []).forEach((i: any) => {
+        invAttMap[i.ceremonia_id] = (invAttMap[i.ceremonia_id] || 0) + 1;
+      });
+      setPerCeremonyInvAttendance(invAttMap);
+
       const proximas = ceremonies.slice(0, 10)
         .map((c: any) => ({
           id: c.id,
@@ -399,7 +422,7 @@ export default function AdminPanelPage() {
   const chartData = resumenes.map((r) => ({
     nombre: r.ceremonia_nombre.length > 18 ? r.ceremonia_nombre.slice(0, 16) + "\u2026" : r.ceremonia_nombre,
     Egresados: perCeremonyEgrAttendance[r.ceremonia_id] ?? 0,
-    Invitados: r.invitados_ingresados,
+    Invitados: perCeremonyInvAttendance[r.ceremonia_id] ?? 0,
   }));
 
   return (
@@ -762,10 +785,10 @@ export default function AdminPanelPage() {
                             {u.activo ? "Activo" : "Inactivo"}
                           </span>
                         </td>
-                        <td className="px-md py-3 text-right">
+                        <td className="px-md py-3 text-right flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleToggleUser(u.id, u.activo, u.rol, u.sede_id)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 shrink-0 ${
                               u.activo ? "bg-primary" : "bg-gray-300 dark:bg-slate-600"
                             }`}
                           >
@@ -774,6 +797,13 @@ export default function AdminPanelPage() {
                                 u.activo ? "translate-x-[22px]" : "translate-x-[2px]"
                               }`}
                             />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(u.id, `${u.nombres} ${u.apellidos}`)}
+                            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                            title="Eliminar usuario"
+                          >
+                            <Trash2 size={15} />
                           </button>
                         </td>
                       </tr>

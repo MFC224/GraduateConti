@@ -181,10 +181,19 @@ export default function EncargadoPanelPage() {
         if (e.ingreso_evento) attMap[e.ceremonia_id] = (attMap[e.ceremonia_id] || 0) + 1;
       });
 
+      const { data: invData } = await (s.from("invitados") as any)
+        .select("ceremonia_id")
+        .in("ceremonia_id", cerIds)
+        .not("ingreso_at", "is", null);
+      const invAttMap: Record<string, number> = {};
+      (invData ?? []).forEach((i: any) => {
+        invAttMap[i.ceremonia_id] = (invAttMap[i.ceremonia_id] || 0) + 1;
+      });
+
       const data = (resumen ?? []).map((r: any) => ({
         nombre: r.ceremonia_nombre.length > 18 ? r.ceremonia_nombre.slice(0, 16) + "\u2026" : r.ceremonia_nombre,
         Egresados: attMap[r.ceremonia_id] ?? 0,
-        Invitados: r.invitados_ingresados,
+        Invitados: invAttMap[r.ceremonia_id] ?? 0,
       }));
       setChartData(data);
     })();
