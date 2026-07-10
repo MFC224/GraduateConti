@@ -829,12 +829,12 @@ export default function OperarioPanelPage() {
 
             {/* ── Acordeón: Togas por Devolver ── */}
             {numerosTogasPendientes.length > 0 && (
-              <details className="bg-surface-container-low rounded-2xl border border-amber-300 dark:border-amber-700 group">
+              <details className="bg-surface-container-low rounded-2xl border border-yellow-400 dark:border-yellow-500 group">
                 <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
-                  <span className="text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider">
                     En Evento / Togas Pendientes ({numerosTogasPendientes.length})
                   </span>
-                  <ChevronDown size={16} className="transition-transform group-open:rotate-180 text-amber-600 dark:text-amber-400" />
+                  <ChevronDown size={16} className="transition-transform group-open:rotate-180 text-yellow-600 dark:text-yellow-400" />
                 </summary>
                 <div className="px-4 pb-4">
                   <div className="flex flex-wrap gap-1.5">
@@ -845,7 +845,7 @@ export default function OperarioPanelPage() {
                           selectByNumeroOrden(numero_orden);
                           setTimeout(() => document.getElementById("detalle-egresado")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
                         }}
-                        className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold transition-colors active:scale-95 shadow-sm text-sm flex items-center justify-center hover:bg-amber-200 dark:hover:bg-amber-900/60"
+                        className="w-10 h-10 rounded-lg bg-yellow-400 text-yellow-950 dark:bg-yellow-500/80 dark:text-yellow-950 font-bold transition-colors active:scale-95 shadow-sm text-sm flex items-center justify-center hover:bg-yellow-500"
                       >
                         {numero_orden}
                       </button>
