@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -14,18 +14,17 @@ interface Props {
 }
 
 export default function MobileBottomNav({ items }: Props) {
-  const router = useRouter();
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full z-[99999] bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 shadow-2xl pointer-events-auto touch-auto">
+    <nav className="fixed inset-x-0 bottom-0 z-[999999] bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 shadow-2xl pointer-events-auto touch-manipulation md:hidden">
       <div className="flex justify-around items-center">
         {items.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;
           return (
-            <button
+            <a
               key={href}
-              onClick={() => router.push(href)}
+              href={href}
               className={`flex flex-col items-center justify-center gap-0.5 p-4 min-w-0 flex-1 transition-all ${
                 isActive
                   ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
@@ -34,7 +33,7 @@ export default function MobileBottomNav({ items }: Props) {
             >
               <Icon size={22} />
               <span className="text-[10px] font-medium">{label}</span>
-            </button>
+            </a>
           );
         })}
       </div>
