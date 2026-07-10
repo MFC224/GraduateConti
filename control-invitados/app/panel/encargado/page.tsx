@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import * as XLSX from "xlsx";
 import {
   LayoutDashboard,
@@ -54,7 +54,6 @@ type EgresadoRow = {
 
 export default function EncargadoPanelPage() {
   const router = useRouter();
-  const pathname = usePathname();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [ceremonias, setCeremonias] = useState<CeremoniaRow[]>([]);
   const [ceremoniaActiva, setCeremoniaActiva] = useState<string | null>(null);
@@ -621,31 +620,14 @@ export default function EncargadoPanelPage() {
       </main>
     </div>
 
-    {/* ── Mobile Bottom Nav ── */}
-    <nav className="md:hidden fixed bottom-0 left-0 w-full z-[100] touch-action-manipulation pointer-events-auto flex justify-around items-center bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-2 py-2 shadow-md">
-      {[
+    <MobileBottomNav
+      items={[
         { href: "/panel/encargado", icon: LayoutDashboard, label: "Dashboard" },
         { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
         { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
         { href: "/panel/settings", icon: Settings, label: "Config" },
-      ].map(({ href, icon: Icon, label }) => {
-        const isActive = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
-              isActive
-                ? "text-primary bg-primary-fixed dark:bg-primary/30 font-bold"
-                : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
-            }`}
-          >
-            <Icon size={22} />
-            <span className="text-[10px] font-medium">{label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+      ]}
+    />
     </>
   );
 }

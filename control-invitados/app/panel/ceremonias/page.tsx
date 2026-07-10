@@ -42,6 +42,7 @@ export default function CeremoniasPage() {
   });
   const [editingCeremonia, setEditingCeremonia] = useState<any | null>(null);
   const [editing, setEditing] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (toast) {
@@ -131,6 +132,7 @@ export default function CeremoniasPage() {
   }
 
   function openEdit(c: any) {
+    setDeletingId(null);
     setEditingCeremonia(c);
     setForm({
       nombre: c.nombre ?? "",
@@ -145,6 +147,7 @@ export default function CeremoniasPage() {
   }
 
   function closeModal() {
+    setDeletingId(null);
     setShowCreate(false);
     setEditing(false);
     setEditingCeremonia(null);
@@ -189,15 +192,20 @@ export default function CeremoniasPage() {
     }
   }
 
-  async function handleDelete(id: string, nombre: string) {
-    if (!window.confirm(`¿Estás seguro de eliminar "${nombre}"? Esto es irreversible.`)) return;
+  async function handleDelete(id: string) {
     try {
       const s = createClient();
       const { error } = await (s.from("ceremonias") as any).delete().eq("id", id);
-      if (error) { setToast({ type: "error", message: error.message }); return; }
+      if (error) {
+        setToast({ type: "error", message: `Error al borrar: ${error.message}` });
+        console.error(error);
+        return;
+      }
       setCeremonias((prev) => prev.filter((c) => c.id !== id));
-      setToast({ type: "success", message: "Ceremonia eliminada permanentemente" });
-    } catch {
+      setDeletingId(null);
+      setToast({ type: "success", message: "Ceremonia eliminada" });
+    } catch (err) {
+      console.error(err);
       setToast({ type: "error", message: "Error de red." });
     }
   }
@@ -224,7 +232,7 @@ export default function CeremoniasPage() {
           </div>
           {(isAdmin || currentUserRol === "encargado") && (
             <button
-              onClick={() => setShowCreate(true)}
+              onClick={() => { setDeletingId(null); setShowCreate(true); }}
               className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-medium text-sm hover:bg-primary/90 transition-all shadow-[0_4px_16px_rgb(0,0,0,0.08)]"
             >
               <Plus size={18} />
@@ -284,11 +292,26 @@ export default function CeremoniasPage() {
                           </button>
                           {c.estado === "finalizada" && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.nombre); }}
-                              className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
-                              title="Eliminar ceremonia"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (deletingId === c.id) {
+                                  handleDelete(c.id);
+                                } else {
+                                  setDeletingId(c.id);
+                                }
+                              }}
+                              className={`p-1.5 rounded-lg transition-all ${
+                                deletingId === c.id
+                                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse"
+                                  : "text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
+                              }`}
+                              title={deletingId === c.id ? "Haz clic de nuevo para borrar" : "Eliminar ceremonia"}
                             >
-                              <Trash2 size={15} />
+                              {deletingId === c.id ? (
+                                <span className="text-[10px] font-bold px-0.5">¿Seguro?</span>
+                              ) : (
+                                <Trash2 size={15} />
+                              )}
                             </button>
                           )}
                         </>
