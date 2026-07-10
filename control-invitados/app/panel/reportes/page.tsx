@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import PanelSidebar from "@/components/PanelSidebar";
-import * as XLSX from "xlsx";
+
 
 export default function ReportesPage() {
   const [fecha, setFecha] = useState("");
@@ -157,17 +157,25 @@ export default function ReportesPage() {
         return;
       }
 
-      const cer = ceremonias.find((c) => c.id === ceremoniaId);
-      const nombreCeremonia = cer?.nombre ?? "SinNombre";
+      const res = await fetch(`/api/reportes/excel?ceremonia_id=${encodeURIComponent(ceremoniaId)}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? `Error del servidor (${res.status})`);
+      }
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Reporte");
-      XLSX.writeFile(wb, `Reporte_Ceremonia_${nombreCeremonia.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s-]/g, "").replace(/\s+/g, "_")}.xlsx`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.headers.get("Content-Disposition")?.split('filename="')[1]?.split('"')[0] ?? "reporte.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
       setToast({ type: "success", message: `Reporte exportado: ${rows.length} registros.` });
-    } catch (err) {
-      setToast({ type: "error", message: "Error al generar el reporte." });
+    } catch (err: any) {
+      setToast({ type: "error", message: err?.message ?? "Error al generar el reporte." });
     }
     setGenerating(false);
   }

@@ -186,6 +186,11 @@ export default function OperarioPanelPage() {
     .map(egr => ({ id: egr.id, numero_orden: egr.numero_orden as number }))
     .sort((a, b) => a.numero_orden - b.numero_orden);
 
+  const numerosTogasPendientes = fullEgresadosList
+    .filter(egr => egr.ingreso_evento === true && egr.toga_entregada === true && egr.toga_devuelta === false && egr.numero_orden != null)
+    .map(egr => ({ id: egr.id, numero_orden: egr.numero_orden as number }))
+    .sort((a, b) => a.numero_orden - b.numero_orden);
+
   async function selectByNumeroOrden(numero: number) {
     const egresado = fullEgresadosList.find(egr => egr.numero_orden === numero);
     if (!egresado) {
@@ -503,17 +508,21 @@ export default function OperarioPanelPage() {
   }
 
   /* ───── Acciones del egresado ───── */
-  async function handleMarcarIngreso() {
+  async function handleCheckinCompleto() {
     if (!selectedEgresado) return;
+    const now = nowPeruISO();
     try {
       const s = createClient();
       await (s.from("egresados") as any)
-        .update({ ingreso_evento: true })
+        .update({ ingreso_evento: true, toga_entregada: true, hora_toga_entregada: now, equipo_entregado_por: currentUserId, dni_retenido: true })
         .eq("id", selectedEgresado.id);
-      setSelectedEgresado({ ...selectedEgresado, ingreso_evento: true });
-      setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, ingreso_evento: true } : egr));
+      setSelectedEgresado({ ...selectedEgresado, ingreso_evento: true, toga_entregada: true, hora_toga_entregada: now, equipo_entregado_por: currentUserId, dni_retenido: true });
+      setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, ingreso_evento: true, toga_entregada: true, hora_toga_entregada: now, equipo_entregado_por: currentUserId, dni_retenido: true } : egr));
       fetchAllCeremonyData();
-    } catch {}
+      setAlert({ type: "success", message: "Check-in completo: ingreso registrado, toga entregada y DNI retenido." });
+    } catch {
+      setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
+    }
   }
 
   async function handleAnularIngreso() {
@@ -545,20 +554,6 @@ export default function OperarioPanelPage() {
     } catch {
       setAlert({ type: "error", message: "Error de red, intenta de nuevo." });
     }
-  }
-
-  async function handleEntregarToga() {
-    if (!selectedEgresado) return;
-    const now = nowPeruISO();
-    try {
-      const s = createClient();
-      await (s.from("egresados") as any)
-        .update({ toga_entregada: true, hora_toga_entregada: now, equipo_entregado_por: currentUserId, dni_retenido: true })
-        .eq("id", selectedEgresado.id);
-      setSelectedEgresado({ ...selectedEgresado, toga_entregada: true, hora_toga_entregada: now, equipo_entregado_por: currentUserId, dni_retenido: true });
-      setFullEgresadosList(prev => prev.map(egr => egr.id === selectedEgresado.id ? { ...egr, toga_entregada: true, hora_toga_entregada: now, equipo_entregado_por: currentUserId, dni_retenido: true } : egr));
-      fetchAllCeremonyData();
-    } catch {}
   }
 
   async function handleDevolverToga() {
@@ -807,26 +802,57 @@ export default function OperarioPanelPage() {
         {/* ════════════ TAB 1: EGRESADOS ════════════ */}
         {activeTab === "egresados" && (
           <>
-            {/* ── Números Faltantes (botonera interactiva) ── */}
+            {/* ── Acordeón: Faltantes por Ingresar ── */}
             {numerosFaltantes.length > 0 && (
-              <section className="bg-surface-container-low rounded-2xl p-4 border border-outline-variant">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-                    Faltan ingresar ({numerosFaltantes.length})
-                  </p>
+              <details className="bg-surface-container-low rounded-2xl border border-outline-variant group">
+                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
+                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                    Faltantes ({numerosFaltantes.length})
+                  </span>
+                  <ChevronDown size={16} className="transition-transform group-open:rotate-180 text-on-surface-variant" />
+                </summary>
+                <div className="px-4 pb-4">
+                  <div className="flex flex-wrap gap-1.5">
+                    {numerosFaltantes.map(({ id, numero_orden }) => (
+                      <button
+                        key={id}
+                        onClick={() => selectByNumeroOrden(numero_orden)}
+                        className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-primary/10 text-on-surface border border-outline/20 font-bold transition-colors active:scale-95 shadow-sm text-sm flex items-center justify-center"
+                      >
+                        {numero_orden}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {numerosFaltantes.map(({ id, numero_orden }) => (
-                    <button
-                      key={id}
-                      onClick={() => selectByNumeroOrden(numero_orden)}
-                      className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-primary/10 text-on-surface border border-outline/20 font-bold transition-colors active:scale-95 shadow-sm text-sm flex items-center justify-center"
-                    >
-                      {numero_orden}
-                    </button>
-                  ))}
+              </details>
+            )}
+
+            {/* ── Acordeón: Togas por Devolver ── */}
+            {numerosTogasPendientes.length > 0 && (
+              <details className="bg-surface-container-low rounded-2xl border border-amber-300 dark:border-amber-700 group">
+                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
+                  <span className="text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider">
+                    En Evento / Togas Pendientes ({numerosTogasPendientes.length})
+                  </span>
+                  <ChevronDown size={16} className="transition-transform group-open:rotate-180 text-amber-600 dark:text-amber-400" />
+                </summary>
+                <div className="px-4 pb-4">
+                  <div className="flex flex-wrap gap-1.5">
+                    {numerosTogasPendientes.map(({ id, numero_orden }) => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          selectByNumeroOrden(numero_orden);
+                          setTimeout(() => document.getElementById("detalle-egresado")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                        }}
+                        className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold transition-colors active:scale-95 shadow-sm text-sm flex items-center justify-center hover:bg-amber-200 dark:hover:bg-amber-900/60"
+                      >
+                        {numero_orden}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </section>
+              </details>
             )}
 
             {/* Buscadores */}
@@ -949,7 +975,7 @@ export default function OperarioPanelPage() {
 
             {/* ── Tarjeta de egresado seleccionado ── */}
             {selectedEgresado && (
-              <section className="bg-white dark:bg-slate-900 border-2 border-gray-100 dark:border-slate-700 rounded-3xl p-6 shadow-xl">
+              <section id="detalle-egresado" className="bg-white dark:bg-slate-900 border-2 border-gray-100 dark:border-slate-700 rounded-3xl p-6 shadow-xl">
                 {/* Header */}
                 <div className="flex items-start gap-5 mb-6">
                   <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0">
@@ -984,8 +1010,8 @@ export default function OperarioPanelPage() {
                         </div>
                       )}
 
-                      {/* Marcar / Anular Ingreso a Campus */}
-                      {selectedEgresado.ingreso_evento ? (
+                      {/* Check-in Completo / Anular Ingreso */}
+                      {selectedEgresado.ingreso_evento && selectedEgresado.toga_entregada ? (
                         <button
                           onClick={handleAnularIngreso}
                           className="w-full h-14 rounded-2xl border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-base font-bold flex items-center justify-center gap-3 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all cursor-pointer"
@@ -995,33 +1021,23 @@ export default function OperarioPanelPage() {
                         </button>
                       ) : (
                         <button
-                          onClick={handleMarcarIngreso}
-                          className="w-full h-14 rounded-2xl border-2 border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-300 text-base font-bold flex items-center justify-center gap-3 hover:border-primary transition-all cursor-pointer"
+                          onClick={handleCheckinCompleto}
+                          className="w-full h-20 rounded-2xl bg-primary text-on-primary text-xl font-black flex items-center justify-center gap-3 hover:bg-primary/90 transition-all shadow-lg cursor-pointer border-2 border-primary"
                         >
-                          <User size={24} className="text-gray-300 dark:text-slate-500" />
-                          Marcar Ingreso a Campus
+                          <Shield size={32} />
+                          Check-in Completo
                         </button>
                       )}
+                    </div>
+                  </div>
+                )}
 
-                      {/* Entregar Toga y Retener DNI */}
-                      <button
-                        onClick={handleEntregarToga}
-                        disabled={selectedEgresado.toga_entregada}
-                        className={`w-full h-14 rounded-2xl border-2 text-base font-bold flex items-center justify-center gap-3 transition-all ${
-                          selectedEgresado.toga_entregada
-                            ? "bg-yellow-100 dark:bg-yellow-900/40 border-yellow-400 text-yellow-800 dark:text-yellow-200"
-                            : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-300 hover:border-primary"
-                        } ${selectedEgresado.toga_entregada ? "cursor-default" : "cursor-pointer"}`}
-                      >
-                        <Shield size={24} className={
-                          selectedEgresado.toga_entregada
-                            ? "text-yellow-600 dark:text-yellow-400"
-                            : "text-gray-300 dark:text-slate-500"
-                        } />
-                        {selectedEgresado.toga_entregada
-                          ? `Toga Entregada — DNI Retenido ${toPeruTime(selectedEgresado.hora_toga_entregada)}`
-                          : "Entregar Toga y Retener DNI"}
-                      </button>
+                {/* ── CHECK-IN STATUS ── */}
+                {selectedEgresado.ingreso_evento && selectedEgresado.toga_entregada && !selectedEgresado.toga_devuelta && (
+                  <div className="mb-4 p-3 rounded-2xl bg-green-100 dark:bg-green-900/40 border-2 border-green-400 text-green-800 dark:text-green-200 flex items-center gap-3">
+                    <CheckCircle size={22} className="text-green-600 dark:text-green-400 shrink-0" />
+                    <div className="text-sm font-semibold">
+                      Check-in completado {toPeruTime(selectedEgresado.hora_toga_entregada)} &mdash; DNI retenido
                     </div>
                   </div>
                 )}
