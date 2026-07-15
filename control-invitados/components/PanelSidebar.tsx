@@ -17,6 +17,8 @@ import {
   Moon,
   Users,
   X,
+  Eye,
+  Smartphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -129,6 +131,41 @@ export default function PanelSidebar() {
           </Link>
         )}
       </div>
+
+      {(userRol === "admin_general" || userRol === "encargado") && (
+        <>
+          <hr className="border-outline-variant dark:border-slate-700 my-xs" />
+          <div className="flex flex-col gap-xs px-2">
+            <span className="font-label-sm text-label-sm text-on-surface-variant dark:text-slate-400 px-2">
+              Vistas de Rol
+            </span>
+            {userRol === "admin_general" && (
+              <Link
+                href="/panel/encargado"
+                className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+                  pathname.startsWith("/panel/encargado")
+                    ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+                    : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+                }`}
+              >
+                <Eye size={20} />
+                <span>Vista Encargado</span>
+              </Link>
+            )}
+            <Link
+              href="/panel/operario"
+              className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+                pathname.startsWith("/panel/operario")
+                  ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+                  : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+              }`}
+            >
+              <Smartphone size={20} />
+              <span>Vista Operario</span>
+            </Link>
+          </div>
+        </>
+      )}
 
       <div className="mt-auto flex flex-col gap-xs">
         <div className="flex items-center justify-between px-4 py-2 rounded-lg text-on-surface-variant dark:text-slate-300">

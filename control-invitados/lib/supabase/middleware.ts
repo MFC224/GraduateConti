@@ -61,8 +61,8 @@ export async function updateSession(request: NextRequest) {
     }
 
     const roleRoutes: Record<string, string[]> = {
-      admin_general: ["/panel/encargado", "/panel/operario"],
-      encargado: ["/panel/admin", "/panel/operario"],
+      admin_general: [],
+      encargado: ["/panel/admin"],
       operario: ["/panel/admin", "/panel/encargado"],
     };
 
