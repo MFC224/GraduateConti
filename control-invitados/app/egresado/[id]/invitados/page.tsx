@@ -6,17 +6,17 @@ import { createClient } from "@/lib/supabase/client";
 import {
   Users,
   Plus,
-  CheckCircle,
-  XCircle,
+  X,
   QrCode,
   User,
   AlertCircle,
   ArrowLeft,
   GraduationCap,
   LogOut,
+  Pencil,
 } from "lucide-react";
 import Header from "@/components/Header";
-import { agregarInvitado } from "@/app/actions/invitados";
+import { agregarInvitado, editarInvitado } from "@/app/actions/invitados";
 
 type EgresadoData = {
   id: string;
@@ -56,6 +56,10 @@ export default function InvitadosPage() {
   });
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
+  const [editTarget, setEditTarget] = useState<InvitadoRow | null>(null);
+  const [editForm, setEditForm] = useState({ dni: "", nombres: "", apellidos: "" });
+  const [editError, setEditError] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -150,6 +154,52 @@ export default function InvitadosPage() {
   function handleLogout() {
     document.cookie = "egresado_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
     router.push("/egresado/ingreso");
+  }
+
+  function abrirEdicion(inv: InvitadoRow) {
+    setEditTarget(inv);
+    setEditForm({ dni: inv.dni, nombres: inv.nombres, apellidos: inv.apellidos });
+    setEditError("");
+  }
+
+  async function guardarEdicion() {
+    if (!editTarget) return;
+    setEditError("");
+    const dni = editForm.dni.trim();
+    const nombres = editForm.nombres.trim();
+    const apellidos = editForm.apellidos.trim();
+
+    if (!/^\d{1,8}$/.test(dni)) {
+      setEditError("El DNI debe ser numérico y tener máximo 8 dígitos.");
+      return;
+    }
+    if (!nombres || !apellidos) {
+      setEditError("Completa todos los campos.");
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const fd = new FormData();
+      fd.set("invitadoId", editTarget.id);
+      fd.set("dni", dni);
+      fd.set("nombres", nombres);
+      fd.set("apellidos", apellidos);
+
+      const res = await editarInvitado(fd);
+      if (!res.success) {
+        setEditError(res.error ?? "Error al guardar.");
+        setEditLoading(false);
+        return;
+      }
+
+      setInvitados(invitados.map((i) => (i.id === editTarget.id ? (res.data as InvitadoRow) : i)));
+      setEditTarget(null);
+      setEditLoading(false);
+    } catch {
+      setEditError("Error al guardar.");
+      setEditLoading(false);
+    }
   }
 
   if (loading) {
@@ -266,6 +316,16 @@ export default function InvitadosPage() {
           </p>
         </div>
 
+        {/* Aviso menores de 3 años */}
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl px-4 py-3 flex items-start gap-3 animate-fadeUp">
+          <span className="text-base leading-none mt-0.5" aria-hidden="true">
+            👶
+          </span>
+          <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
+            Nota importante: Los niños menores a 3 años no ocupan asiento (pueden ingresar en las piernas de un adulto) y no necesitan consumir un pase de invitado.
+          </p>
+        </div>
+
         {/* Invitados Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
@@ -307,18 +367,28 @@ export default function InvitadosPage() {
                   key={inv.id}
                   className="bg-white dark:bg-slate-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 dark:border-slate-700 p-5 flex flex-col hover:shadow-lg transition-all duration-200"
                 >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-                      <User size={20} className="text-gray-500 dark:text-slate-400" />
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                        <User size={20} className="text-gray-500 dark:text-slate-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {inv.nombres} {inv.apellidos}
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          DNI: {inv.dni}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {inv.nombres} {inv.apellidos}
-                      </h3>
-                      <p className="text-xs text-gray-500 dark:text-slate-400">
-                        DNI: {inv.dni}
-                      </p>
-                    </div>
+                    <button
+                      onClick={() => abrirEdicion(inv)}
+                      className="p-2 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-primary transition-colors shrink-0"
+                      title="Editar invitado"
+                      aria-label={`Editar a ${inv.nombres} ${inv.apellidos}`}
+                    >
+                      <Pencil size={16} />
+                    </button>
                   </div>
                   {inv.es_menor_7 && (
                     <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
@@ -353,12 +423,15 @@ export default function InvitadosPage() {
             </div>
           )}
 
-          {/* Add Guest Form */}
+          {/* Add Guest Modal */}
           {formOpen && (
-            <div className="mt-6 bg-white dark:bg-slate-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 dark:border-slate-700 p-6 max-w-lg">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-                Agregar invitado
-              </h3>
+            <Modal
+              title="Agregar invitado"
+              onClose={() => {
+                setFormOpen(false);
+                setFormError("");
+              }}
+            >
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" htmlFor="inv-dni">
@@ -449,10 +522,112 @@ export default function InvitadosPage() {
                   </button>
                 </div>
               </div>
-            </div>
+            </Modal>
+          )}
+
+          {/* Edit Guest Modal */}
+          {editTarget && (
+            <Modal title="Editar invitado" onClose={() => setEditTarget(null)}>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" htmlFor="edit-dni">
+                    DNI
+                  </label>
+                  <input
+                    id="edit-dni"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="DNI del invitado"
+                    value={editForm.dni}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, dni: e.target.value })
+                    }
+                    className="w-full h-11 px-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" htmlFor="edit-nombres">
+                    Nombres
+                  </label>
+                  <input
+                    id="edit-nombres"
+                    type="text"
+                    placeholder="Nombres del invitado"
+                    value={editForm.nombres}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, nombres: e.target.value })
+                    }
+                    className="w-full h-11 px-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" htmlFor="edit-apellidos">
+                    Apellidos
+                  </label>
+                  <input
+                    id="edit-apellidos"
+                    type="text"
+                    placeholder="Apellidos del invitado"
+                    value={editForm.apellidos}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, apellidos: e.target.value })
+                    }
+                    className="w-full h-11 px-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                  />
+                </div>
+                {editError && (
+                  <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                    {editError}
+                  </p>
+                )}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setEditTarget(null)}
+                    className="flex-1 h-11 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={guardarEdicion}
+                    disabled={editLoading}
+                    className="flex-1 h-11 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+                  >
+                    {editLoading ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                </div>
+              </div>
+            </Modal>
           )}
         </section>
       </div>
     </main>
+  );
+}
+
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-6 animate-fadeUp max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1"
+            aria-label="Cerrar"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
   );
 }
