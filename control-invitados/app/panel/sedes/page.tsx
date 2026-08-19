@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Building2 } from "lucide-react";
+import { Plus, Building2, Pencil, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import PanelSidebar from "@/components/PanelSidebar";
-import { crearSede, toggleSede } from "@/app/actions/sedes";
+import { crearSede, editarSede, toggleSede } from "@/app/actions/sedes";
 
 export default function SedesPage() {
   const router = useRouter();
@@ -14,6 +14,8 @@ export default function SedesPage() {
   const [currentUserRol, setCurrentUserRol] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editSede, setEditSede] = useState<any | null>(null);
+  const [editing, setEditing] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [form, setForm] = useState({ nombre: "", ciudad: "", direccion: "" });
 
@@ -95,6 +97,50 @@ export default function SedesPage() {
     }
   }
 
+  function openCreate() {
+    setEditSede(null);
+    setForm({ nombre: "", ciudad: "", direccion: "" });
+    setShowCreate(true);
+  }
+
+  function openEdit(sede: any) {
+    setShowCreate(false);
+    setEditSede(sede);
+    setForm({ nombre: sede.nombre, ciudad: sede.ciudad ?? "", direccion: sede.direccion ?? "" });
+  }
+
+  function closeModal() {
+    setShowCreate(false);
+    setEditSede(null);
+    setForm({ nombre: "", ciudad: "", direccion: "" });
+  }
+
+  async function handleEdit() {
+    if (!editSede) return;
+    if (!form.nombre) {
+      setToast({ type: "error", message: "El nombre de la sede es obligatorio." });
+      return;
+    }
+    setEditing(true);
+    const fd = new FormData();
+    fd.set("sedeId", editSede.id);
+    fd.set("nombre", form.nombre);
+    fd.set("ciudad", form.ciudad);
+    fd.set("direccion", form.direccion);
+    fd.set("currentUserRol", currentUserRol ?? "");
+    const res = await editarSede(fd);
+    setEditing(false);
+    if (res.success) {
+      setToast({ type: "success", message: "Sede actualizada correctamente" });
+      setSedes((prev) =>
+        prev.map((s) => (s.id === editSede.id ? { ...s, nombre: form.nombre, ciudad: form.ciudad || null, direccion: form.direccion || null } : s))
+      );
+      closeModal();
+    } else {
+      setToast({ type: "error", message: res.error ?? "Error al actualizar sede." });
+    }
+  }
+
   if (loading) return null;
 
   return (
@@ -111,7 +157,7 @@ export default function SedesPage() {
             </p>
           </div>
           <button
-            onClick={() => setShowCreate(true)}
+            onClick={openCreate}
             className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-medium text-sm hover:bg-primary/90 transition-all shadow-[0_4px_16px_rgb(0,0,0,0.08)]"
           >
             <Plus size={18} />
@@ -161,18 +207,27 @@ export default function SedesPage() {
                         </span>
                       </td>
                       <td className="px-md py-3 text-right">
-                        <button
-                          onClick={() => handleToggle(s.id, s.activo)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                            s.activo ? "bg-primary" : "bg-gray-300 dark:bg-slate-600"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              s.activo ? "translate-x-[22px]" : "translate-x-[2px]"
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEdit(s)}
+                            className="p-2.5 rounded-lg text-gray-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                            title="Editar sede"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleToggle(s.id, s.activo)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                              s.activo ? "bg-primary" : "bg-gray-300 dark:bg-slate-600"
                             }`}
-                          />
-                        </button>
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                s.activo ? "translate-x-[22px]" : "translate-x-[2px]"
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -200,13 +255,15 @@ export default function SedesPage() {
       )}
 
       {/* ── Modal ── */}
-      {showCreate && (
+      {(showCreate || editSede) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 animate-fadeUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Nueva Sede</h3>
-              <button onClick={() => setShowCreate(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {editSede ? "Editar Sede" : "Nueva Sede"}
+              </h3>
+              <button onClick={closeModal} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
+                <X size={24} />
               </button>
             </div>
 
@@ -245,17 +302,17 @@ export default function SedesPage() {
 
             <div className="flex justify-end gap-3 mt-8">
               <button
-                onClick={() => setShowCreate(false)}
+                onClick={closeModal}
                 className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleCreate}
-                disabled={creating}
+                onClick={editSede ? handleEdit : handleCreate}
+                disabled={editSede ? editing : creating}
                 className="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2"
               >
-                {creating ? "Creando..." : "Crear Sede"}
+                {editSede ? (editing ? "Guardando..." : "Guardar Cambios") : (creating ? "Creando..." : "Crear Sede")}
               </button>
             </div>
           </div>

@@ -61,10 +61,10 @@ export default function EgresadoIngresoPage() {
 
     try {
       const supabase = createClient();
-      const { data: resultados, error: supabaseError } = await supabase
-        .from("egresados")
-        .select("id, nombres, apellidos, ceremonia_id")
-        .eq("dni", dniTrimmed);
+      const { data: resultados, error: supabaseError } = await (supabase as any).rpc(
+        "egresado_login",
+        { dni_param: dniTrimmed }
+      );
 
       if (supabaseError) throw supabaseError;
 

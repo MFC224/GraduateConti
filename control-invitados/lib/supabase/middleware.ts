@@ -47,9 +47,15 @@ export async function updateSession(request: NextRequest) {
 
   if (user) {
     const { data: usuario } = await (supabase.from("usuarios") as any)
-      .select("rol")
+      .select("rol, activo")
       .eq("id", user.id)
       .single();
+
+    if (!usuario || !usuario.activo || !getRoleBasePath(usuario?.rol ?? null)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/staff/ingreso";
+      return NextResponse.redirect(url);
+    }
 
     const path = request.nextUrl.pathname;
     const expectedBase = getRoleBasePath(usuario?.rol ?? null);

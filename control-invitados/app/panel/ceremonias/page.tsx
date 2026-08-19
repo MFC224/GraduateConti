@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import PanelSidebar from "@/components/PanelSidebar";
-import { crearCeremonia, editarCeremonia } from "@/app/actions/ceremonias";
+import { crearCeremonia, editarCeremonia, eliminarCeremonia } from "@/app/actions/ceremonias";
 
 type SedeRow = { id: string; nombre: string };
 
@@ -194,11 +194,12 @@ export default function CeremoniasPage() {
 
   async function handleDelete(id: string) {
     try {
-      const s = createClient();
-      const { error } = await (s.from("ceremonias") as any).delete().eq("id", id);
-      if (error) {
-        setToast({ type: "error", message: `Error al borrar: ${error.message}` });
-        console.error(error);
+      const fd = new FormData();
+      fd.set("ceremoniaId", id);
+      const res = await eliminarCeremonia(fd);
+      if (!res.success) {
+        setToast({ type: "error", message: res.error ?? "Error al borrar: no tienes permisos." });
+        setDeletingId(null);
         return;
       }
       setCeremonias((prev) => prev.filter((c) => c.id !== id));
@@ -206,6 +207,7 @@ export default function CeremoniasPage() {
       setToast({ type: "success", message: "Ceremonia eliminada" });
     } catch (err) {
       console.error(err);
+      setDeletingId(null);
       setToast({ type: "error", message: "Error de red." });
     }
   }
@@ -285,7 +287,7 @@ export default function CeremoniasPage() {
                         <>
                           <button
                             onClick={(e) => { e.stopPropagation(); openEdit(c); }}
-                            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-primary transition-all"
+                            className="p-2.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-primary transition-all"
                             title="Editar ceremonia"
                           >
                             <Pencil size={15} />
@@ -300,7 +302,7 @@ export default function CeremoniasPage() {
                                   setDeletingId(c.id);
                                 }
                               }}
-                              className={`p-1.5 rounded-lg transition-all ${
+                              className={`p-2.5 rounded-lg transition-all ${
                                 deletingId === c.id
                                   ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse"
                                   : "text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"

@@ -24,11 +24,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("rol")
+    .select("rol, activo")
     .eq("id", user.id)
     .single();
 
-  if (!usuario || usuario.rol !== "admin_general") {
+  if (!usuario || !usuario.activo || usuario.rol !== "admin_general") {
     redirect("/panel/encargado");
   }
 

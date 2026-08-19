@@ -26,12 +26,10 @@ type InvitacionRow = {
   egresado_id: string;
   qr_token: string;
   estado: string;
-  ceremonias: {
-    nombre: string;
-    fecha: string;
-    hora_inicio: string;
-    sedes: { nombre: string } | null;
-  } | null;
+  ceremonia_nombre: string;
+  ceremonia_fecha: string;
+  ceremonia_hora_inicio: string;
+  sede_nombre: string;
 };
 
 function formatFecha(fecha: string, hora: string): string {
@@ -59,13 +57,9 @@ export default function InvitacionClient() {
     async function fetchData() {
       try {
         const supabase = createClient();
-        const { data: row, error: err } = await supabase
-          .from("invitados")
-          .select(
-            "id, nombres, apellidos, egresado_id, qr_token, estado, ceremonias(nombre, fecha, hora_inicio, sedes(nombre))"
-          )
-          .eq("qr_token", qrToken)
-          .single();
+        const { data: row, error: err } = await (supabase as any)
+          .rpc("invitado_por_qr", { qr_param: qrToken })
+          .maybeSingle();
 
         if (err) throw err;
         if (!row) {
@@ -85,10 +79,10 @@ export default function InvitacionClient() {
           nombres: r.nombres,
           apellidos: r.apellidos,
           qr_token: r.qr_token,
-          ceremonia_nombre: r.ceremonias?.nombre ?? "",
-          ceremonia_fecha: r.ceremonias?.fecha ?? "",
-          ceremonia_hora_inicio: r.ceremonias?.hora_inicio ?? "",
-          sede_nombre: r.ceremonias?.sedes?.nombre ?? "",
+          ceremonia_nombre: r.ceremonia_nombre ?? "",
+          ceremonia_fecha: r.ceremonia_fecha ?? "",
+          ceremonia_hora_inicio: r.ceremonia_hora_inicio ?? "",
+          sede_nombre: r.sede_nombre ?? "",
         });
       } catch {
         setError("No pudimos cargar la invitación. Intenta de nuevo.");

@@ -1224,7 +1224,7 @@ export default function OperarioPanelPage() {
               </div>
 
               {/* Scanner viewfinder — wrapper forzado con fondo blanco y video full */}
-              <div className={`${scannerActive ? "block" : "hidden"} w-full max-w-sm mx-auto bg-white rounded-lg overflow-hidden relative z-50 [&_video]:!object-cover [&_video]:!w-full [&_video]:!h-full border border-gray-300`}>
+              <div className={`${scannerActive ? "block" : "hidden"} w-full max-w-sm mx-auto bg-white dark:bg-slate-900 rounded-lg overflow-hidden relative z-50 [&_video]:!object-cover [&_video]:!w-full [&_video]:!h-full border border-gray-300 dark:border-slate-600`}>
                 <div id={SCANNER_ELEMENT_ID} className="w-full min-h-[300px]" />
               </div>
             </section>

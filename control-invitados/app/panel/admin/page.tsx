@@ -28,7 +28,7 @@ import {
 } from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import PanelSidebar from "@/components/PanelSidebar";
-import { crearUsuario, toggleUserStatus } from "@/app/actions/usuarios";
+import { crearUsuario, toggleUserStatus, eliminarUsuario } from "@/app/actions/usuarios";
 
 type SedeRow = { id: string; nombre: string; ciudad: string | null };
 
@@ -224,9 +224,13 @@ export default function AdminPanelPage() {
   async function handleDeleteUser(userId: string, userName: string) {
     if (!window.confirm(`¿Estás seguro de que deseas eliminar a "${userName}" permanentemente?`)) return;
     try {
-      const s = createClient();
-      const { error } = await (s.from("usuarios") as any).delete().eq("id", userId);
-      if (error) { setToast({ type: "error", message: error.message }); return; }
+      const fd = new FormData();
+      fd.set("userId", userId);
+      const res = await eliminarUsuario(fd);
+      if (!res.success) {
+        setToast({ type: "error", message: res.error ?? "Error al eliminar usuario." });
+        return;
+      }
       setUsuarios((prev) => prev.filter((u: any) => u.id !== userId));
       setToast({ type: "success", message: "Usuario eliminado." });
     } catch { setToast({ type: "error", message: "Error de red." }); }
@@ -660,7 +664,7 @@ export default function AdminPanelPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteUser(u.id, `${u.nombres} ${u.apellidos}`)}
-                            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                            className="p-2.5 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
                             title="Eliminar usuario"
                           >
                             <Trash2 size={15} />

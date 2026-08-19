@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   FileSpreadsheet,
   Calendar,
@@ -10,6 +10,7 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import PanelSidebar from "@/components/PanelSidebar";
@@ -19,6 +20,9 @@ export default function ReportesPage() {
   const [fecha, setFecha] = useState("");
   const [ceremonias, setCeremonias] = useState<any[]>([]);
   const [ceremoniaId, setCeremoniaId] = useState("");
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [loadingCeremonias, setLoadingCeremonias] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -57,25 +61,66 @@ export default function ReportesPage() {
     }
   }, [toast]);
 
-  async function buscarCeremoniasPorFecha(f: string) {
-    if (!f) {
-      setCeremonias([]);
-      setCeremoniaId("");
-      setPrevia(null);
-      return;
+  useEffect(() => {
+    (async () => {
+      setLoadingCeremonias(true);
+      try {
+        const s = createClient();
+        const { data } = await (s.from("ceremonias") as any)
+          .select("id, nombre, sede_id, fecha, hora_inicio, estado, programa_principal, sedes(nombre)")
+          .order("fecha", { ascending: false })
+          .order("hora_inicio", { ascending: false });
+        setCeremonias(data ?? []);
+      } catch {}
+      setLoadingCeremonias(false);
+    })();
+  }, []);
+
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setOpen(false);
     }
-    setLoadingCeremonias(true);
+    function onDocKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onDocKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onDocKeyDown);
+    };
+  }, []);
+
+  const normalizar = (t: string) =>
+    t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const ceremoniaSeleccionada = ceremonias.find((c) => c.id === ceremoniaId) ?? null;
+
+  const ceremoniasFiltradas = ceremonias.filter((c) => {
+    if (fecha && c.fecha !== fecha) return false;
+    const q = normalizar(query.trim());
+    if (!q) return true;
+    const sede = c.sedes?.nombre ?? "";
+    const programa = c.programa_principal ?? "";
+    return [c.nombre, sede, programa].some((t) => normalizar(t).includes(q));
+  });
+
+  function handleQueryChange(v: string) {
+    setQuery(v);
+    setOpen(true);
+    if (v !== (ceremoniaSeleccionada?.nombre ?? "")) setCeremoniaId("");
+  }
+
+  function handleSelectCeremonia(c: any) {
+    setCeremoniaId(c.id);
+    setQuery(c.nombre);
+    setOpen(false);
+  }
+
+  function handleClearCeremonia() {
+    setQuery("");
     setCeremoniaId("");
-    setPrevia(null);
-    try {
-      const s = createClient();
-      const { data } = await (s.from("ceremonias") as any)
-        .select("id, nombre, sede_id, fecha, hora_inicio, estado")
-        .eq("fecha", f)
-        .order("hora_inicio", { ascending: true });
-      setCeremonias(data ?? []);
-    } catch {}
-    setLoadingCeremonias(false);
+    setOpen(false);
   }
 
   async function fetchReportData(cId: string) {
@@ -198,43 +243,80 @@ export default function ReportesPage() {
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="w-full md:w-64">
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                Filtrar por Fecha
+                Filtrar por Fecha (opcional)
               </label>
               <div className="relative">
                 <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
                 <input
                   type="date"
                   value={fecha}
-                  onChange={(e) => {
-                    setFecha(e.target.value);
-                    buscarCeremoniasPorFecha(e.target.value);
-                  }}
+                  onChange={(e) => setFecha(e.target.value)}
                   className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
                 />
               </div>
             </div>
 
-            <div className="w-full md:w-80">
+            <div className="w-full md:w-96">
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Ceremonia
               </label>
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
-                <select
-                  value={ceremoniaId}
-                  onChange={(e) => setCeremoniaId(e.target.value)}
-                  disabled={!fecha || loadingCeremonias}
-                  className="w-full appearance-none border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {loadingCeremonias ? "Buscando..." : !fecha ? "Selecciona una fecha primero" : "Seleccionar ceremonia"}
-                  </option>
-                  {ceremonias.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre} — {c.hora_inicio?.slice(0, 5) ?? "—"} ({c.estado === "en_curso" ? "En Curso" : "Planificada"})
-                    </option>
-                  ))}
-                </select>
+              <div className="relative" ref={searchRef}>
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" />
+                <input
+                  type="text"
+                  value={open ? query : (ceremoniaSeleccionada?.nombre ?? query)}
+                  onChange={(e) => handleQueryChange(e.target.value)}
+                  onFocus={() => setOpen(true)}
+                  placeholder="Buscar por nombre, sede o programa..."
+                  className="w-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                />
+                {(ceremoniaId || query) && (
+                  <button
+                    type="button"
+                    onClick={handleClearCeremonia}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-white transition-colors"
+                    title="Limpiar selección"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+                {open && (
+                  <div className="absolute z-20 mt-2 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                    {loadingCeremonias ? (
+                      <div className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400">
+                        <Loader2 size={20} className="inline animate-spin mr-2" />
+                        Cargando...
+                      </div>
+                    ) : ceremoniasFiltradas.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400">
+                        No se encontraron ceremonias con los filtros actuales.
+                      </div>
+                    ) : (
+                      <ul className="max-h-64 overflow-y-auto py-1">
+                        {ceremoniasFiltradas.map((c) => (
+                          <li key={c.id}>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectCeremonia(c)}
+                              className={`w-full text-left px-4 py-2.5 transition-colors ${
+                                c.id === ceremoniaId
+                                  ? "bg-primary/10 dark:bg-primary/20"
+                                  : "hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                              }`}
+                            >
+                              <span className="block text-sm font-medium text-gray-900 dark:text-white">
+                                {c.nombre}
+                              </span>
+                              <span className="block text-xs text-gray-500 dark:text-slate-400">
+                                {[c.sedes?.nombre, c.fecha, c.hora_inicio?.slice(0, 5), c.programa_principal].filter(Boolean).join(" • ")}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -251,9 +333,9 @@ export default function ReportesPage() {
             </button>
           </div>
 
-          {ceremonias.length === 0 && fecha && !loadingCeremonias && (
+          {ceremonias.length > 0 && ceremoniasFiltradas.length === 0 && !open && (
             <p className="text-sm text-gray-500 dark:text-slate-400 mt-4">
-              No se encontraron ceremonias para esta fecha.
+              No se encontraron ceremonias con los filtros actuales.
             </p>
           )}
         </div>
@@ -351,8 +433,7 @@ export default function ReportesPage() {
                         }`}
                         onClick={() => {
                           setFecha(c.fecha);
-                          setCeremoniaId(c.id);
-                          buscarCeremoniasPorFecha(c.fecha);
+                          handleSelectCeremonia(c);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
                       >

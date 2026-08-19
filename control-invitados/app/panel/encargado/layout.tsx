@@ -24,11 +24,11 @@ export default async function EncargadoLayout({ children }: { children: React.Re
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("rol")
+    .select("rol, activo")
     .eq("id", user.id)
     .single();
 
-  if (!usuario) {
+  if (!usuario || !usuario.activo) {
     redirect("/staff/ingreso");
   }
 

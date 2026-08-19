@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import ExcelJS from "exceljs";
 
 function getAdminClient() {
@@ -27,6 +28,23 @@ function parseTime(timeStr: string): number {
 
 export async function GET(request: NextRequest) {
   try {
+    const serverSupabase = await createServerClient();
+    const {
+      data: { user },
+    } = await serverSupabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { data: usuario } = await (serverSupabase.from("usuarios") as any)
+      .select("rol, activo")
+      .eq("id", user.id)
+      .single();
+
+    if (!usuario || !usuario.activo || !["admin_general", "encargado"].includes(usuario.rol)) {
+      return NextResponse.json({ error: "No tienes permiso para exportar reportes." }, { status: 403 });
+    }
+
     const ceremoniaId = request.nextUrl.searchParams.get("ceremonia_id");
     if (!ceremoniaId) {
       return NextResponse.json({ error: "Falta ceremonia_id" }, { status: 400 });

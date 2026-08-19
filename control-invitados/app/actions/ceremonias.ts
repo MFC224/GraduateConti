@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { registrarAuditoria } from "./auditoria";
+import { getServerUserInfo } from "@/lib/rbac";
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,8 +18,8 @@ export async function crearCeremonia(formData: FormData) {
     const supabase = getAdminClient();
     if (!supabase) return { error: "Configuración del servidor faltante." };
 
-    const currentUserRol = formData.get("currentUserRol") as string;
-    if (currentUserRol !== "admin_general" && currentUserRol !== "encargado") {
+    const { rol } = await getServerUserInfo();
+    if (rol !== "admin_general" && rol !== "encargado") {
       return { error: "No tienes permiso para crear ceremonias." };
     }
 
@@ -69,8 +70,8 @@ export async function editarCeremonia(formData: FormData) {
     const supabase = getAdminClient();
     if (!supabase) return { error: "Configuración del servidor faltante." };
 
-    const currentUserRol = formData.get("currentUserRol") as string;
-    if (currentUserRol !== "admin_general") {
+    const { rol } = await getServerUserInfo();
+    if (rol !== "admin_general") {
       return { error: "Solo admin_general puede editar ceremonias." };
     }
 
@@ -120,10 +121,44 @@ export async function editarCeremonia(formData: FormData) {
   }
 }
 
+export async function eliminarCeremonia(formData: FormData) {
+  try {
+    const supabase = getAdminClient();
+    if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+    const { rol } = await getServerUserInfo();
+    if (rol !== "admin_general") {
+      return { success: false, error: "Solo admin_general puede eliminar ceremonias." };
+    }
+
+    const ceremoniaId = formData.get("ceremoniaId") as string;
+    if (!ceremoniaId) return { success: false, error: "ID de ceremonia no proporcionado." };
+
+    const { error } = await supabase.from("ceremonias").delete().eq("id", ceremoniaId);
+
+    if (error) return { success: false, error: error.message };
+
+    registrarAuditoria({
+      accion: "eliminar_ceremonia",
+      entidad: "ceremonias",
+      entidad_id: ceremoniaId,
+    }).catch(() => {});
+
+    return { success: true, error: null };
+  } catch (error: any) {
+    return { success: false, error: error?.message ?? "Error interno del servidor." };
+  }
+}
+
 export async function finalizarCeremonia(formData: FormData) {
   try {
     const supabase = getAdminClient();
     if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+    const { rol } = await getServerUserInfo();
+    if (rol !== "admin_general" && rol !== "encargado") {
+      return { success: false, error: "No tienes permiso para finalizar ceremonias." };
+    }
 
     const ceremoniaId = formData.get("ceremoniaId") as string;
     if (!ceremoniaId) return { success: false, error: "ID de ceremonia no proporcionado." };
@@ -164,6 +199,11 @@ export async function finalizarCeremonia(formData: FormData) {
 export async function actualizarAutoridades(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general" && rol !== "encargado") {
+    return { success: false, error: "No tienes permiso para actualizar autoridades." };
+  }
 
   const ceremoniaId = formData.get("ceremoniaId") as string;
   const autoridadesRaw = formData.get("autoridades") as string;

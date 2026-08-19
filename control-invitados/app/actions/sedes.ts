@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { getServerUserInfo } from "@/lib/rbac";
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -15,8 +16,8 @@ export async function crearSede(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
 
-  const currentUserRol = formData.get("currentUserRol") as string;
-  if (currentUserRol !== "admin_general") {
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general") {
     return { success: false, error: "Solo admin_general puede crear sedes." };
   }
 
@@ -39,12 +40,43 @@ export async function crearSede(formData: FormData) {
   return { success: true, error: null };
 }
 
+export async function editarSede(formData: FormData) {
+  const supabase = getAdminClient();
+  if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general") {
+    return { success: false, error: "Solo admin_general puede modificar sedes." };
+  }
+
+  const sedeId = formData.get("sedeId") as string;
+  const nombre = formData.get("nombre") as string;
+  const ciudad = formData.get("ciudad") as string;
+  const direccion = formData.get("direccion") as string;
+
+  if (!sedeId) {
+    return { success: false, error: "ID de sede no proporcionado." };
+  }
+
+  if (!nombre) {
+    return { success: false, error: "El nombre de la sede es obligatorio." };
+  }
+
+  const { error } = await supabase
+    .from("sedes")
+    .update({ nombre, ciudad: ciudad || null, direccion: direccion || null })
+    .eq("id", sedeId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, error: null };
+}
+
 export async function toggleSede(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
 
-  const currentUserRol = formData.get("currentUserRol") as string;
-  if (currentUserRol !== "admin_general") {
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general") {
     return { success: false, error: "Solo admin_general puede modificar sedes." };
   }
 

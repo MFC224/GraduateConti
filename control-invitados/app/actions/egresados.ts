@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { registrarAuditoria } from "./auditoria";
 import { capitalizarNombre } from "@/app/utils/formatters";
+import { getServerUserInfo } from "@/lib/rbac";
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,6 +43,11 @@ function mapearColumnas(row: Record<string, unknown>): Record<string, unknown> {
 export async function importarEgresadosMasivo(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general" && rol !== "encargado") {
+    return { success: false, error: "No tienes permiso para importar egresados." };
+  }
 
   const ceremoniaId = formData.get("ceremoniaId") as string;
   const raw = formData.get("egresados") as string;
@@ -109,6 +115,11 @@ export async function marcarAlumnoDiscurso(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
 
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general" && rol !== "encargado") {
+    return { success: false, error: "No tienes permiso para esta acción." };
+  }
+
   const egresadoId = formData.get("egresadoId") as string;
   const ceremoniaId = formData.get("ceremoniaId") as string;
 
@@ -145,6 +156,11 @@ export async function marcarAlumnoDiscurso(formData: FormData) {
 export async function trasladarEgresadoCeremonia(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general" && rol !== "encargado") {
+    return { success: false, error: "No tienes permiso para trasladar egresados." };
+  }
 
   const egresadoId = formData.get("egresadoId") as string;
   const nuevaCeremoniaId = formData.get("nuevaCeremoniaId") as string;
@@ -183,6 +199,11 @@ export async function trasladarEgresadoCeremonia(formData: FormData) {
 export async function actualizarCupoBase(formData: FormData) {
   const supabase = getAdminClient();
   if (!supabase) return { success: false, error: "Configuración del servidor faltante." };
+
+  const { rol } = await getServerUserInfo();
+  if (rol !== "admin_general" && rol !== "encargado") {
+    return { success: false, error: "No tienes permiso para actualizar el cupo." };
+  }
 
   const ceremoniaId = formData.get("ceremoniaId") as string;
   const cupo = formData.get("cupo") as string;
