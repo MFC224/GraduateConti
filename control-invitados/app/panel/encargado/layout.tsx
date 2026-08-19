@@ -36,9 +36,5 @@ export default async function EncargadoLayout({ children }: { children: React.Re
     redirect("/panel/operario");
   }
 
-  if (usuario.rol === "admin_general") {
-    redirect("/panel/admin");
-  }
-
   return <>{children}</>;
 }
