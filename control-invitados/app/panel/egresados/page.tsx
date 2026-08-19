@@ -101,7 +101,7 @@ export default function EgresadosPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
@@ -158,8 +158,8 @@ export default function EgresadosPage() {
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">N°</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">DNI</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Egresado</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Carrera</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Ceremonia</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Carrera</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Ceremonia</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Asistencia</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Toga</th>
                     </tr>
@@ -177,8 +177,8 @@ export default function EgresadosPage() {
                           <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{e.numero_orden ?? "—"}</td>
                           <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-300">{e.dni}</td>
                           <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{e.apellidos}, {e.nombres}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">{e.programa_academico ?? "—"}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">{e.ceremonias?.nombre ?? "—"}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400 hidden md:table-cell">{e.programa_academico ?? "—"}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400 hidden md:table-cell">{e.ceremonias?.nombre ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                               e.confirmado_asistencia

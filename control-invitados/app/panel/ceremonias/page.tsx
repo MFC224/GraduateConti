@@ -222,7 +222,7 @@ export default function CeremoniasPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">

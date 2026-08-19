@@ -146,7 +146,7 @@ export default function SedesPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
@@ -172,7 +172,7 @@ export default function SedesPage() {
                 <tr className="border-b border-outline-variant dark:border-slate-700 bg-surface dark:bg-slate-800/50">
                   <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Sede</th>
                   <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Ciudad</th>
-                  <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Dirección</th>
+                  <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold hidden md:table-cell">Dirección</th>
                   <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Estado</th>
                   <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold text-right">Acciones</th>
                 </tr>
@@ -194,7 +194,7 @@ export default function SedesPage() {
                       <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300">
                         {s.ciudad ?? "—"}
                       </td>
-                      <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300">
+                      <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300 hidden md:table-cell">
                         {s.direccion ?? "—"}
                       </td>
                       <td className="px-md py-3">

@@ -353,7 +353,7 @@ export default function CeremoniaDetallePage() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         {/* Back */}
         <button
           onClick={() => router.push("/panel/ceremonias")}
@@ -738,7 +738,7 @@ export default function CeremoniaDetallePage() {
       {/* Modal: Añadir Autoridad */}
       {showAddAutoridad && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Añadir Autoridad</h3>
               <button onClick={() => setShowAddAutoridad(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
@@ -791,7 +791,7 @@ export default function CeremoniaDetallePage() {
       {/* Modal: Reasignar Turno */}
       {showTransfer && transferEgresado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Reasignar Turno</h3>
               <button onClick={() => setShowTransfer(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">
@@ -853,7 +853,7 @@ export default function CeremoniaDetallePage() {
       {/* ── Extratemporal Modal ── */}
       {isAdmin && showExtratemporal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowExtratemporal(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-fadeUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Registro Extratemporal</h3>
               <button onClick={() => setShowExtratemporal(false)} className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors p-1">

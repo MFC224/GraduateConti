@@ -43,7 +43,7 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         <div className="max-w-2xl">
           <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Configuración

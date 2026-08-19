@@ -86,7 +86,7 @@ export default function InvitadosPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-on-background antialiased">
       <PanelSidebar />
-      <div className="flex-1 overflow-y-auto p-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
@@ -142,8 +142,8 @@ export default function InvitadosPage() {
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">DNI</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Nombres</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Apellidos</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Egresado Vinculado</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Ceremonia</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Egresado Vinculado</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Ceremonia</th>
                       <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Estado Ingreso</th>
                     </tr>
                   </thead>
@@ -160,10 +160,10 @@ export default function InvitadosPage() {
                           <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{inv.dni}</td>
                           <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-300">{inv.nombres}</td>
                           <td className="px-4 py-3 text-sm text-gray-700 dark:text-slate-300">{inv.apellidos}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400 hidden md:table-cell">
                             {inv.egresados ? `${inv.egresados.apellidos}, ${inv.egresados.nombres}` : "—"}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-400 hidden md:table-cell">
                             {inv.ceremonias?.nombre ?? "—"}
                           </td>
                           <td className="px-4 py-3">

@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import {
-  LayoutDashboard,
   GraduationCap,
   Calendar,
-  Settings,
   Users,
   CalendarCheck,
   ClipboardList,
@@ -391,7 +388,7 @@ export default function AdminPanelPage() {
       <PanelSidebar />
 
       {/* ── Main Content Area ── */}
-      <div className="flex-1 overflow-y-auto p-8 pb-24 md:pb-8 animate-fadeUp">
+      <div className="flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-8 animate-fadeUp">
         {/* ── Executive Dashboard ── */}
         <section className="mb-12">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -612,9 +609,9 @@ export default function AdminPanelPage() {
                   <tr className="border-b border-outline-variant dark:border-slate-700 bg-surface dark:bg-slate-800/50">
                     <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Nombres</th>
                     <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Apellidos</th>
-                    <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">DNI</th>
+                    <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold hidden md:table-cell">DNI</th>
                     <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Rol</th>
-                    <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Sede</th>
+                    <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold hidden md:table-cell">Sede</th>
                     <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold">Estado</th>
                     <th className="px-md py-3 font-label-md text-label-md text-on-surface-variant dark:text-slate-400 font-semibold text-right">Acciones</th>
                   </tr>
@@ -631,7 +628,7 @@ export default function AdminPanelPage() {
                       <tr key={u.id} className="hover:bg-surface-container-low dark:hover:bg-slate-700/30 transition-colors h-14">
                         <td className="px-md py-3 font-label-md text-label-md text-on-surface dark:text-white font-semibold">{u.nombres}</td>
                         <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300">{u.apellidos}</td>
-                        <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300">{u.dni ?? "—"}</td>
+                        <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300 hidden md:table-cell">{u.dni ?? "—"}</td>
                         <td className="px-md py-3">
                           <span className={`px-2 py-1 rounded-full font-label-sm text-label-sm ${
                             u.rol === "admin_general" ? "bg-primary-fixed text-on-primary-fixed dark:bg-primary/30 dark:text-white" :
@@ -641,7 +638,7 @@ export default function AdminPanelPage() {
                             {u.rol === "admin_general" ? "Admin" : u.rol === "encargado" ? "Encargado" : "Operario"}
                           </span>
                         </td>
-                        <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300">
+                        <td className="px-md py-3 font-body-md text-body-md text-on-surface-variant dark:text-slate-300 hidden md:table-cell">
                           {u.sedes?.nombre ?? "Todas"}
                         </td>
                         <td className="px-md py-3">
@@ -680,15 +677,6 @@ export default function AdminPanelPage() {
         </section>
       </div>
     </div>
-
-    <MobileBottomNav
-      items={[
-        { href: "/panel/admin", icon: LayoutDashboard, label: "Dashboard" },
-        { href: "/panel/egresados", icon: GraduationCap, label: "Egresados" },
-        { href: "/panel/ceremonias", icon: Calendar, label: "Ceremonias" },
-        { href: "/panel/settings", icon: Settings, label: "Config" },
-      ]}
-    />
 
     {/* ── Toast Notification ── */}
     {toast && (

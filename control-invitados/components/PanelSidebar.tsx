@@ -20,6 +20,7 @@ import {
   Eye,
   Smartphone,
   ChevronDown,
+  Menu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -38,6 +39,7 @@ export default function PanelSidebar() {
   const [mounted, setMounted] = useState(false);
   const [userRol, setUserRol] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -71,7 +73,170 @@ export default function PanelSidebar() {
   const isAdmin = userRol === "admin_general";
   const dashboardHref = isAdmin ? "/panel/admin" : "/panel/encargado";
 
+  const navLinks = (
+    <>
+      {userRol && (
+        <Link
+          href={dashboardHref}
+          className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+            pathname === dashboardHref
+              ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+              : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+          }`}
+        >
+          <LayoutDashboard size={20} />
+          <span>Dashboard</span>
+        </Link>
+      )}
+      {navItems.map(({ href, icon: Icon, label }) => {
+        const isActive = pathname === href;
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+              isActive
+                ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+                : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+            }`}
+          >
+            <Icon size={20} />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+      {isAdmin && (
+        <Link
+          href="/panel/sedes"
+          className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+            pathname === "/panel/sedes"
+              ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+              : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+          }`}
+        >
+          <Building2 size={20} />
+          <span>Sedes</span>
+        </Link>
+      )}
+      {(userRol === "admin_general" || userRol === "encargado") && (
+        <>
+          <hr className="border-outline-variant dark:border-slate-700 my-xs" />
+          <span className="font-label-sm text-label-sm text-on-surface-variant dark:text-slate-400 px-2 mt-xs">
+            Vistas de Rol
+          </span>
+          {userRol === "admin_general" && (
+            <Link
+              href="/panel/encargado"
+              className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+                pathname.startsWith("/panel/encargado")
+                  ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+                  : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+              }`}
+            >
+              <Eye size={20} />
+              <span>Vista Encargado</span>
+            </Link>
+          )}
+          <Link
+            href="/panel/operario"
+            className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
+              pathname.startsWith("/panel/operario")
+                ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
+                : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
+            }`}
+          >
+            <Smartphone size={20} />
+            <span>Vista Operario</span>
+          </Link>
+        </>
+      )}
+    </>
+  );
+
   return (
+    <>
+      {/* ── Mobile top bar ── */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-surface-container-lowest dark:bg-slate-900 border-b border-outline-variant dark:border-slate-700 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-sm">
+            UC
+          </div>
+          <span className="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">
+            Graduation Admin
+          </span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-2 rounded-lg hover:bg-surface-container-high dark:hover:bg-slate-800 transition-colors"
+          aria-label="Abrir menú"
+        >
+          <Menu size={24} className="text-on-surface dark:text-white" />
+        </button>
+      </div>
+
+      {/* ── Mobile drawer ── */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[90] md:hidden">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-[85%] max-w-xs bg-surface-container-lowest dark:bg-slate-900 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-sm">
+                  UC
+                </div>
+                <span className="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">
+                  Menú
+                </span>
+              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-2 rounded-lg hover:bg-surface-container-high dark:hover:bg-slate-800 transition-colors"
+                aria-label="Cerrar menú"
+              >
+                <X size={22} className="text-on-surface dark:text-white" />
+              </button>
+            </div>
+            <div className="flex-1 flex flex-col gap-xs overflow-y-auto p-md pb-24 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700">
+              {navLinks}
+            </div>
+            <div className="shrink-0 flex flex-col gap-xs border-t border-outline-variant dark:border-slate-700 p-md">
+              <div className="flex items-center justify-between px-4 py-2 rounded-lg text-on-surface-variant dark:text-slate-300">
+                <span className="font-label-md text-label-sm">Tema</span>
+                {mounted && (
+                  <button
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="p-2 rounded-lg hover:bg-surface-container-high dark:hover:bg-slate-700 transition-colors"
+                    aria-label="Toggle dark mode"
+                  >
+                    {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setIsHelpOpen(true);
+                  setMobileOpen(false);
+                }}
+                className="flex items-center gap-md w-full px-4 py-3 rounded-lg text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700 transition-all"
+              >
+                <HelpCircle size={20} />
+                <span className="font-label-md text-label-md">Help</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-md w-full px-4 py-3 rounded-lg text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700 transition-all"
+              >
+                <LogOut size={20} />
+                <span className="font-label-md text-label-md">Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     <aside className="hidden md:flex flex-col w-64 shrink-0 h-screen p-md pb-24 gap-base bg-surface-container-lowest dark:bg-slate-900 border-r border-outline-variant dark:border-slate-700 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
       <div className="mb-lg flex items-center gap-sm px-4">
         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-lg">
@@ -88,85 +253,8 @@ export default function PanelSidebar() {
       </div>
 
       <div className="flex-1 flex flex-col gap-xs">
-        {userRol && (
-          <Link
-            href={dashboardHref}
-            className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
-              pathname === dashboardHref
-                ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
-                : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
-            }`}
-          >
-            <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </Link>
-        )}
-        {navItems.map(({ href, icon: Icon, label }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
-                isActive
-                  ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
-                  : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
-              }`}
-            >
-              <Icon size={20} />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-        {isAdmin && (
-          <Link
-            href="/panel/sedes"
-            className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
-              pathname === "/panel/sedes"
-                ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
-                : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
-            }`}
-          >
-            <Building2 size={20} />
-            <span>Sedes</span>
-          </Link>
-        )}
+        {navLinks}
       </div>
-
-      {(userRol === "admin_general" || userRol === "encargado") && (
-        <>
-          <hr className="border-outline-variant dark:border-slate-700 my-xs" />
-          <div className="flex flex-col gap-xs px-2">
-            <span className="font-label-sm text-label-sm text-on-surface-variant dark:text-slate-400 px-2">
-              Vistas de Rol
-            </span>
-            {userRol === "admin_general" && (
-              <Link
-                href="/panel/encargado"
-                className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
-                  pathname.startsWith("/panel/encargado")
-                    ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
-                    : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
-                }`}
-              >
-                <Eye size={20} />
-                <span>Vista Encargado</span>
-              </Link>
-            )}
-            <Link
-              href="/panel/operario"
-              className={`flex items-center gap-md px-4 py-3 rounded-lg font-label-md text-label-md transition-all ${
-                pathname.startsWith("/panel/operario")
-                  ? "bg-primary-container dark:bg-primary/30 text-on-primary-container dark:text-white font-semibold"
-                  : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container-high dark:hover:bg-slate-700"
-              }`}
-            >
-              <Smartphone size={20} />
-              <span>Vista Operario</span>
-            </Link>
-          </div>
-        </>
-      )}
 
       <div className="mt-auto flex flex-col gap-xs">
         <div className="flex items-center justify-between px-4 py-2 rounded-lg text-on-surface-variant dark:text-slate-300">
@@ -330,6 +418,7 @@ export default function PanelSidebar() {
         </div>
       )}
     </aside>
+    </>
   );
 }
 
