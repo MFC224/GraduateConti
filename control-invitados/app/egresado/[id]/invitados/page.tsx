@@ -16,6 +16,7 @@ import {
   LogOut,
 } from "lucide-react";
 import Header from "@/components/Header";
+import { agregarInvitado } from "@/app/actions/invitados";
 
 type EgresadoData = {
   id: string;
@@ -106,7 +107,7 @@ export default function InvitadosPage() {
     } catch {}
   }
 
-  async function agregarInvitado() {
+  async function agregarInvitadoForm() {
     setFormError("");
     const dni = formData.dni.trim();
     const nombres = formData.nombres.trim();
@@ -123,38 +124,20 @@ export default function InvitadosPage() {
 
     setFormLoading(true);
     try {
-      const s = createClient();
-      const aprobados = invitados.filter((i) => i.estado === "aprobado").length;
-      const cupoBase = egresado?.cupo_base_invitado ?? 3;
-      if (aprobados >= cupoBase) {
-        setFormError(`Has alcanzado el límite máximo de ${cupoBase} invitados.`);
+      const fd = new FormData();
+      fd.set("dni", dni);
+      fd.set("nombres", nombres);
+      fd.set("apellidos", apellidos);
+      fd.set("es_menor_7", formData.es_menor_7 ? "true" : "false");
+
+      const res = await agregarInvitado(fd);
+      if (!res.success) {
+        setFormError(res.error ?? "Error al registrar invitado.");
         setFormLoading(false);
         return;
       }
 
-      const nuevoInvitado = {
-        egresado_id: id,
-        ceremonia_id: egresado!.ceremonia_id,
-        dni,
-        nombres,
-        apellidos,
-        es_menor_7: formData.es_menor_7,
-        tipo_cupo: "base",
-        estado: "aprobado",
-      };
-
-      const { data, error } = await (s.from("invitados") as any)
-        .insert(nuevoInvitado)
-        .select("id, dni, nombres, apellidos, es_menor_7, tipo_cupo, estado, qr_token")
-        .single();
-
-      if (error) {
-        setFormError("Error al registrar. Verifica que el DNI no esté duplicado.");
-        setFormLoading(false);
-        return;
-      }
-
-      setInvitados([...invitados, data as InvitadoRow]);
+      setInvitados([...invitados, res.data as InvitadoRow]);
       setFormData({ dni: "", nombres: "", apellidos: "", es_menor_7: false });
       setFormOpen(false);
       setFormLoading(false);
@@ -287,15 +270,25 @@ export default function InvitadosPage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mis Invitados</h2>
-            {!formOpen && (
-              <button
-                onClick={() => setFormOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all duration-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
-              >
-                <Plus size={18} />
-                Agregar invitado
-              </button>
-            )}
+            {!formOpen &&
+              (aprobados >= cupoBase ? (
+                <button
+                  disabled
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400 text-sm font-medium rounded-xl cursor-not-allowed"
+                  title={`Has alcanzado el límite máximo de ${cupoBase} invitados.`}
+                >
+                  <Plus size={18} />
+                  Límite alcanzado
+                </button>
+              ) : (
+                <button
+                  onClick={() => setFormOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all duration-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+                >
+                  <Plus size={18} />
+                  Agregar invitado
+                </button>
+              ))}
           </div>
 
           {invitados.length === 0 ? (
@@ -448,7 +441,7 @@ export default function InvitadosPage() {
                     Cancelar
                   </button>
                   <button
-                    onClick={agregarInvitado}
+                    onClick={agregarInvitadoForm}
                     disabled={formLoading}
                     className="flex-1 h-11 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                   >
