@@ -339,7 +339,7 @@ export default function EncargadoPanelPage() {
     <div className="bg-surface-container-low dark:bg-slate-950 text-on-surface dark:text-white font-body-md antialiased min-h-screen flex">
       <Header />
       {/* ── Sidebar ── */}
-      <nav className="hidden md:flex flex-col w-64 h-[calc(100vh-64px)] fixed left-0 top-16 p-md gap-base bg-surface-container-lowest dark:bg-slate-900 border-r border-outline-variant dark:border-slate-700 z-40 pointer-events-auto">
+      <nav className="hidden md:flex flex-col w-64 h-[calc(100vh-64px)] fixed left-0 top-16 p-md pb-24 gap-base bg-surface-container-lowest dark:bg-slate-900 border-r border-outline-variant dark:border-slate-700 z-40 pointer-events-auto overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
         <div className="mb-lg">
           <div className="flex items-center gap-sm mb-xs">
             <div className="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-on-primary font-bold text-lg">

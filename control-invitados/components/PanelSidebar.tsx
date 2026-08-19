@@ -19,6 +19,7 @@ import {
   X,
   Eye,
   Smartphone,
+  ChevronDown,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -71,7 +72,7 @@ export default function PanelSidebar() {
   const dashboardHref = isAdmin ? "/panel/admin" : "/panel/encargado";
 
   return (
-    <aside className="hidden md:flex flex-col w-64 shrink-0 h-full p-md gap-base bg-surface-container-lowest dark:bg-slate-900 border-r border-outline-variant dark:border-slate-700">
+    <aside className="hidden md:flex flex-col w-64 shrink-0 h-screen p-md pb-24 gap-base bg-surface-container-lowest dark:bg-slate-900 border-r border-outline-variant dark:border-slate-700 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
       <div className="mb-lg flex items-center gap-sm px-4">
         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-lg">
           UC
@@ -250,6 +251,54 @@ export default function PanelSidebar() {
                 </div>
               </section>
 
+              {/* Section 1b: FAQ por categorías */}
+              <section>
+                <h3 className="text-sm font-semibold text-primary dark:text-primary uppercase tracking-wider mb-4">
+                  Preguntas Frecuentes
+                </h3>
+                <div className="space-y-3">
+                  <FaqAccordion titulo="Ceremonias y Sedes">
+                    <FaqItem
+                      pregunta="¿Cómo registro una nueva ceremonia?"
+                      respuesta='Ve a la pestaña "Ceremonias" y haz clic en "+ Nueva Ceremonia". Deberás asignarle un nombre, fecha, hora, aforo máximo y vincularla a una Sede existente.'
+                    />
+                    <FaqItem
+                      pregunta="¿Cómo edito una Sede que tiene datos faltantes?"
+                      respuesta='Ve a la sección "Sedes" y haz clic en el ícono de lápiz junto a la sede correspondiente para actualizar su dirección o ciudad.'
+                    />
+                  </FaqAccordion>
+
+                  <FaqAccordion titulo="Reportes y Analítica">
+                    <FaqItem
+                      pregunta="¿Cómo genero un reporte de asistencia?"
+                      respuesta='En la pestaña "Reportes", usa el buscador de texto para encontrar tu ceremonia (ej. escribe "Arequipa" o "Ingeniería"). Luego haz clic en "Generar Reporte Excel".'
+                    />
+                    <FaqItem
+                      pregunta="¿Qué información contiene el Excel?"
+                      respuesta='El archivo tiene dos hojas: "Detalle de Asistencia" (muestra la hora exacta de ingreso de cada alumno y si devolvió o no la toga) y "Resumen Ejecutivo" (muestra métricas de aforo, togas faltantes y horas pico de llegada).'
+                    />
+                  </FaqAccordion>
+
+                  <FaqAccordion titulo="Operación en Puerta">
+                    <FaqItem
+                      pregunta="¿Cómo marco el ingreso de un egresado?"
+                      respuesta='En la "Vista Operario", busca al egresado (por DNI, orden o escaneando su QR) y haz clic en el botón verde unificado "Registrar Ingreso y Entregar Toga".'
+                    />
+                    <FaqItem
+                      pregunta="¿Cómo registro la devolución de la toga a la salida?"
+                      respuesta='En la "Vista Operario", abre el menú desplegable amarillo "Togas por Devolver". Haz clic en el número del egresado y confirma la devolución para liberarlo del sistema.'
+                    />
+                  </FaqAccordion>
+
+                  <FaqAccordion titulo="Roles del Sistema">
+                    <FaqItem
+                      pregunta='¿Para qué sirven los botones de "Vistas de Rol"?'
+                      respuesta="Permiten a los Administradores y Encargados acceder a las pantallas de los operarios de puerta para supervisar o ayudar en el escaneo, sin necesidad de cerrar sesión."
+                    />
+                  </FaqAccordion>
+                </div>
+              </section>
+
               {/* Section 2: Glosario */}
               <section>
                 <h3 className="text-sm font-semibold text-primary dark:text-primary uppercase tracking-wider mb-4">
@@ -281,5 +330,36 @@ export default function PanelSidebar() {
         </div>
       )}
     </aside>
+  );
+}
+
+function FaqItem({ pregunta, respuesta }: { pregunta: string; respuesta: string }) {
+  return (
+    <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3">
+      <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1">{pregunta}</h4>
+      <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">{respuesta}</p>
+    </div>
+  );
+}
+
+function FaqAccordion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer"
+        aria-expanded={open}
+      >
+        <span className="font-semibold text-sm text-gray-900 dark:text-white">{titulo}</span>
+        <ChevronDown
+          size={18}
+          className={`shrink-0 text-gray-500 dark:text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="px-3 py-3 space-y-3 border-t border-gray-100 dark:border-slate-700">{children}</div>
+      )}
+    </section>
   );
 }
